@@ -9,7 +9,7 @@
         <div class="filter-nav">
           <span class="sortby">Sort by:</span>
           <a href="javascript:void(0)" class="default cur">Default</a>
-          <a href="javascript:void(0)" class="price">Price
+          <a href="javascript:void(0)" class="price" @click.prevent="sortPrice">Price
             <svg class="icon icon-arrow-short">
               <use xlink:href="#icon-arrow-short"></use>
             </svg>
@@ -38,17 +38,23 @@
               <ul>
                 <li v-for="good in goods" :key="good.productId">
                   <div class="pic">
-                    <a href="#"><img v-lazy="'static/images/'+ good.productImg" alt=""></a>
+                    <a href="#"><img v-lazy="'static/images/'+ good.productImage" alt=""></a>
                   </div>
                   <div class="main">
                     <div class="name">{{good.productName}}</div>
-                    <div class="price">￥{{good.ProductPrice}}</div>
+                    <div class="price">￥{{good.salePrice}}</div>
                     <div class="btn-area">
-                      <a href="javascript:;" class="btn btn--m">加入购物车</a>
+                      <a href="javascript:;" class="btn btn--m" @click="addCart(good.productId)">加入购物车</a>
                     </div>
                   </div>
                 </li>
               </ul>
+              <div class="load-more"
+                   v-infinite-scroll="loadMore"
+                   infinite-scroll-disabled="busy"
+                   infinite-scroll-distance="20">
+                <img src="../assets/loading/loading-spinning-bubbles.svg" v-show="loading">
+              </div>
             </div>
           </div>
         </div>
@@ -60,11 +66,11 @@
 </template>
 
 <script type="text/ecmascript-6">
-  import '../assets/css/base.css'
-  import '../assets/css/product.css'
   import SHeader from 'components/s-header'
   import SFooter from 'components/s-footer'
   import Tab from 'components/tab'
+
+  const ERR_OK = 0
 
   export default {
     data() {
@@ -85,16 +91,21 @@
           },
           {
             startPrice: 1000,
-            endPrice: 2000
+            endPrice: 5000
           }
         ],
         checkPrice: 'all',
         filterFlag: false,
-        overLayFlag: false
+        overLayFlag: false,
+        page: 1,
+        pageSize: 8,
+        sortFlag: true,
+        busy: false,
+        loading: false
       }
     },
     mounted() {
-      this._getGoods()
+      this._getGoodsList(false)
     },
     methods: {
       showFilterPop() {
@@ -108,10 +119,56 @@
       setPriceFilter(index) {
         this.checkPrice = index
         this.closePop()
+        this.page = 1
+        this._getGoodsList()
       },
-      _getGoods() {
-        this.$axios.get('/api/goods').then((res) => {
-          this.goods = res.data.results
+      sortPrice() {
+        this.sortFlag = !this.sortFlag
+        this.page = 1
+        this._getGoodsList()
+      },
+      loadMore() {
+        this.busy = true
+        setTimeout(() => {
+          this.page++
+          this._getGoodsList(true)
+        }, 500)
+      },
+      addCart(productId) {
+        this.$axios.post('/goods/addCart', {
+          productId: productId
+        }).then((res) => {
+          if (res.data.status === ERR_OK) {
+            alert('加入成功！')
+          } else {
+            alert(res.data.msg)
+          }
+        })
+      },
+      _getGoodsList(flag) {
+        let params = {
+          page: this.page,
+          pageSize: this.pageSize,
+          sort: this.sortFlag ? 1 : -1,
+          priceLevel: this.checkPrice
+        }
+        this.loading = true
+        this.$axios.get('/goods/list', {
+          params: params
+        }).then((res) => {
+          if (res.data.status === ERR_OK) {
+            this.loading = false
+            if (flag) {
+              this.goods = this.goods.concat(res.data.results.list)
+              if (res.data.results.length === 0) {
+                this.busy = true
+              } else {
+                this.busy = false
+              }
+            } else {
+              this.goods = res.data.results.list
+            }
+          }
         })
       }
     },
