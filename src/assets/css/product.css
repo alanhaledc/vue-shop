@@ -529,6 +529,12 @@
   padding-top: 40px;
 }
 
+.load-more {
+  height: 100px;
+  line-height: 100px;
+  text-align: center;
+}
+
 @media only screen and (max-width: 767px) {
   .page-title-accessory {
     display: block;
