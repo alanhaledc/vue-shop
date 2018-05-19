@@ -9,7 +9,7 @@
         <div class="filter-nav">
           <span class="sortby">Sort by:</span>
           <a href="javascript:void(0)" class="default cur">Default</a>
-          <a href="javascript:void(0)" class="price" @click.prevent="sortPrice">Price
+          <a href="javascript:void(0)" class="price" :class="{'sort-up': sortFlag}" @click.prevent="sortPrice">Price
             <svg class="icon icon-arrow-short">
               <use xlink:href="#icon-arrow-short"></use>
             </svg>
@@ -53,7 +53,7 @@
                    v-infinite-scroll="loadMore"
                    infinite-scroll-disabled="busy"
                    infinite-scroll-distance="20">
-                <img src="../assets/loading/loading-spinning-bubbles.svg" v-show="loading">
+                <img src="../assets/loading-spinning-bubbles.svg" v-show="loading">
               </div>
             </div>
           </div>
@@ -61,6 +61,26 @@
       </div>
     </div>
     <div class="md-overlay" v-show="overLayFlag" @click.stop="closePop"></div>
+    <model :mdShow="mdShow" @close="closeModel">
+      <p slot="message">
+        请先登录，否则无法加入到购物车中
+      </p>
+      <div slot="btn-group">
+        <a class="btn btn--m" @click="mdShow=false">关闭</a>
+      </div>
+    </model>
+    <model :mdShow="mdShowCart" @close="closeModel">
+      <p slot="message">
+        <svg class="icon icon-status-ok">
+          <use xlink:href="#icon-status-ok"></use>
+        </svg>
+        <span>加入购物车成功！</span>
+      </p>
+      <div slot="btn-group">
+        <a class="btn btn--m" @click="mdShowCart=false">继续购物</a>
+        <router-link to="/cart" class="btn btn--m">查看购物车</router-link>
+      </div>
+    </model>
     <s-footer/>
   </div>
 </template>
@@ -69,6 +89,7 @@
   import SHeader from 'components/s-header'
   import SFooter from 'components/s-footer'
   import Tab from 'components/tab'
+  import Model from 'components/model'
 
   const ERR_OK = 0
 
@@ -101,7 +122,9 @@
         pageSize: 8,
         sortFlag: true,
         busy: false,
-        loading: false
+        loading: false,
+        mdShow: false,
+        mdShowCart: false
       }
     },
     mounted() {
@@ -139,11 +162,15 @@
           productId: productId
         }).then((res) => {
           if (res.data.status === ERR_OK) {
-            alert('加入成功！')
+            this.mdShowCart = true
           } else {
-            alert(res.data.msg)
+            this.mdShow = true
           }
         })
+      },
+      closeModel() {
+        this.mdShow = false
+        this.mdShowCart = false
       },
       _getGoodsList(flag) {
         let params = {
@@ -175,7 +202,8 @@
     components: {
       SHeader,
       SFooter,
-      Tab
+      Tab,
+      Model
     }
   }
 </script>
