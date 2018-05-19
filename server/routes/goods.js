@@ -125,7 +125,7 @@ router.post('/addCart', (req, res, next) => {
             } else {
               if (doc1) {
                 doc1.productNum = 1
-                doc1.checked = 1
+                doc1.checked = true
                 usersDoc.cartList.push(doc1)
                 usersDoc.save(function(err2) {
                   if (err2) {
