@@ -13,7 +13,7 @@ const userSchema = new Schema({
       salePrice: Number,
       productImage: String,
       productNum: String,
-      checked: String
+      checked: Boolean
     }
   ],
   addressList: Array
