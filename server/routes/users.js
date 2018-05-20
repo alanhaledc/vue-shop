@@ -162,29 +162,46 @@ router.post('/cart/checkedALL', (req, res, next) => {
       })
     } else {
       if (usersDoc) {
-        if (checkedAllFlag) {
-          usersDoc.cartList.forEach(item => {
-            item.checked = true
-          })
-          usersDoc.save((err1, doc1) => {
-            if (err1) {
-              res.json({
-                status: 1,
-                msg: err.message,
-                results: ''
-              })
-            } else {
-              res.json({
-                status: 0,
-                msg: '',
-                results: 'success'
-              })
-            }
-          })
-        }
+        usersDoc.cartList.forEach(item => {
+          item.checked = checkedAllFlag
+        })
+        usersDoc.save(err1 => {
+          if (err1) {
+            res.json({
+              status: 1,
+              msg: err.message,
+              results: ''
+            })
+          } else {
+            res.json({
+              status: 0,
+              msg: '',
+              results: 'success'
+            })
+          }
+        })
       }
     }
+  })
+})
 
+// 获取地址列表
+router.get('/address', (req, res, next) => {
+  const userId = req.cookies.userId
+  Users.findOne({userId: userId}, (err, doc) => {
+    if (err) {
+      res.json({
+        status: 1,
+        message: err.message,
+        results: ''
+      })
+    } else {
+      res.json({
+        status: 0,
+        message: '',
+        results: doc.addressList
+      })
+    }
   })
 })
 module.exports = router
