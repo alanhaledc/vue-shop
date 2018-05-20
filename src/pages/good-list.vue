@@ -127,7 +127,7 @@
         mdShowCart: false
       }
     },
-    mounted() {
+    created() {
       this._getGoodsList(false)
     },
     methods: {
@@ -194,6 +194,7 @@
               }
             } else {
               this.goods = res.data.results.list
+              this.busy = true
             }
           }
         })
