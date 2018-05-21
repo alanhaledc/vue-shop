@@ -71,26 +71,30 @@
         <div class="addr-list-wrap">
           <div class="addr-list">
             <ul>
-              <li v-for="address in addressList" :key="address.addressId">
+              <li v-for="(address,index) in filterAddressList"
+                  :key="address._id"
+                  @click="currentIndex=index, selectId=address._id"
+                  :class="{check: currentIndex===index}">
                 <dl>
                   <dt>{{address.userName}}</dt>
                   <dd class="address">{{address.streetName}}</dd>
                   <dd class="tel">{{address.tel}}</dd>
                 </dl>
                 <div class="addr-opration addr-del">
-                  <a href="javascript:;" class="addr-del-btn">
+                  <a href="javascript:;" class="addr-del-btn" @click="deleteAddress(address)">
                     <svg class="icon icon-del">
                       <use xlink:href="#icon-del"></use>
                     </svg>
                   </a>
                 </div>
-                <div class="addr-opration addr-set-default" v-show="!address.isDefault">
-                  <a href="javascript:;" class="addr-set-default-btn"><i>Set default</i></a>
+                <div class="addr-opration addr-set-default">
+                  <a href="javascript:;" class="addr-set-default-btn" v-if="!address.isDefault"
+                     @click="setDefault(address._id)"><i>Set default</i></a>
                 </div>
-                <div class="addr-opration addr-default" v-show="address.isDefault">Default address</div>
+                <div class="addr-opration addr-default" v-if="address.isDefault">Default address</div>
               </li>
               <li class="addr-new">
-                <div class="add-new-inner">
+                <div class="add-new-inner" @click="mdAddAddress=true">
                   <i class="icon-add">
                     <svg class="icon icon-add">
                       <use xlink:href="#icon-add"></use>
@@ -103,7 +107,7 @@
           </div>
 
           <div class="shipping-addr-more">
-            <a class="addr-more-btn up-down-btn" href="javascript:;">
+            <a class="addr-more-btn up-down-btn" href="javascript:;" @click="toggleExpand" :class="{open: expandFlag}">
               more
               <i class="i-up-down">
                 <i class="i-up-down-l"></i>
@@ -134,10 +138,31 @@
           </div>
         </div>
         <div class="next-btn-wrap">
-          <a class="btn btn--m btn--red">Next</a>
+          <a class="btn btn--m btn--red" @click="goOrder">Next</a>
         </div>
       </div>
     </div>
+    <model :mdShow="mdConfirm" @close="closeModel">
+      <p slot="message">
+        <span>你确认要删除这个地址吗？</span>
+      </p>
+      <div slot="btn-group">
+        <span class="btn btn--m" @click="mdConfirm=false">取消</span>
+        <span class="btn btn--m" @click="deleteConfirm">确认</span>
+      </div>
+    </model>
+    <model :mdShow="mdAddAddress" @close="closeModel">
+      <div slot="message">
+        <label for="add-name">姓名：<input type="text" id="add-name" v-model="addName"></label>
+        <label for="add-address">地址：<input type="text" id="add-address" v-model="addAddress"></label>>
+        <label for="add-postcode">邮编：<input type="text" id="add-postcode" v-model="addPostcode"></label>
+        <label for="add-tel">电话：<input type="text" id="add-tel" v-model="addTel"></label>
+      </div>
+      <div slot="btn-group">
+        <span class="btn btn--m" @click="mdAddAddress=false">取消</span>
+        <span class="btn btn--m" @click="AddConfirm">确认</span>
+      </div>
+    </model>
     <s-footer/>
   </div>
 </template>
@@ -146,18 +171,98 @@
   import SHeader from 'components/s-header'
   import SFooter from 'components/s-footer'
   import Tab from 'components/tab'
+  import Model from 'components/model'
+
   const ERR_OK = 0
 
   export default {
     data() {
       return {
-        addressList: []
+        addressList: [],
+        mdConfirm: false,
+        selectId: '',
+        mdAddAddress: false,
+        addName: '',
+        addAddress: '',
+        addPostcode: '',
+        addTel: '',
+        expandFlag: false,
+        currentIndex: 0
       }
     },
     created() {
       this._getAddressList()
     },
+    computed: {
+      filterAddressList() {
+        if (!this.expandFlag) {
+          return this.addressList
+        } else {
+          return this.addressList.slice(0, 3)
+        }
+      }
+    },
     methods: {
+      deleteAddress(address) {
+        this.selectId = address._id
+        this.mdConfirm = true
+      },
+      deleteConfirm() {
+        let addressId = this.selectId
+        console.log(addressId)
+        this.$axios.post('/users/address/del', {
+          addressId
+        }).then(res => {
+          if (res.data.status === ERR_OK) {
+            this._getAddressList()
+            this.mdConfirm = false
+          }
+        })
+      },
+      closeModel() {
+        this.mdConfirm = false
+        this.mdAddAddress = false
+      },
+      AddConfirm() {
+        let newAddress = {
+          userName: this.addName,
+          streetName: this.addAddress,
+          postCode: this.addPostcode,
+          tel: this.addTel
+        }
+        this.$axios.post('/users/address/add', {
+          newAddress
+        }).then(res => {
+          if (res.data.status === ERR_OK) {
+            this._getAddressList()
+            this.mdAddAddress = false
+            newAddress = {}
+          }
+        })
+      },
+      toggleExpand() {
+        this.expandFlag = !this.expandFlag
+      },
+      setDefault(id) {
+        console.log(id)
+        this.$axios.post('/users/address/setDefault', {
+          id
+        }).then(res => {
+          if (res.data.status === ERR_OK) {
+            this._getAddressList()
+          }
+        })
+      },
+      goOrder() {
+        if (this.selectId) {
+          this.$router.push({
+            path: '/orderConfirm',
+            query: {
+              addressId: this.selectId
+            }
+          })
+        }
+      },
       _getAddressList() {
         this.$axios.get('/users/address').then(res => {
           if (res.data.status === ERR_OK) {
@@ -169,7 +274,8 @@
     components: {
       SHeader,
       SFooter,
-      Tab
+      Tab,
+      Model
     }
   }
 </script>
