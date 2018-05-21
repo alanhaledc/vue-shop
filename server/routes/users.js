@@ -204,4 +204,109 @@ router.get('/address', (req, res, next) => {
     }
   })
 })
+
+// 删除地址
+router.post('/address/del', (req, res, next) => {
+  const userId = req.cookies.userId
+  const addressId = req.body.addressId
+
+  Users.update({userId: userId}, {
+    $pull: {
+      addressList: {_id: addressId}
+    }
+  }, (err) => {
+    if (err) {
+      res.json({
+        status: 1,
+        msg: '',
+        results: ''
+      })
+    } else {
+      res.json({
+        status: 0,
+        msg: '',
+        results: 'success'
+      })
+    }
+  })
+})
+
+// 新增地址
+router.post('/address/add', (req, res, next) => {
+  let userId = req.cookies.userId
+  let newAddress = req.body.newAddress
+  Users.findOne({userId: userId}, (err, usersDoc) => {
+    if (err) {
+      res.json({
+        status: 1,
+        msg: err.message,
+        results: ''
+      })
+    } else {
+      if (usersDoc) {
+        usersDoc.addressList.push({
+          ...newAddress,
+          isDefault: false
+        })
+        usersDoc.save(err => {
+          if (err) {
+            res.json({
+              status: 1,
+              msg: err.message,
+              results: ''
+            })
+          } else {
+            res.json({
+              status: 0,
+              msg: '',
+              results: 'success'
+            })
+          }
+        })
+      }
+    }
+  })
+})
+
+// 设置默认地址
+router.post('/address/setDefault', (req, res, next) => {
+  const userId = req.cookies.userId
+  const id = req.body.id
+
+  Users.findOne({userId: userId}, (err, usersDoc) => {
+    if (err) {
+      res.json({
+        status: 1,
+        msg: err.message,
+        results: ''
+      })
+    } else {
+      if (usersDoc) {
+        usersDoc.addressList.forEach(item => {
+          if (item._id.toString() === id) {
+            item.isDefault = true
+          } else {
+            item.isDefault = false
+          }
+        })
+        usersDoc.save(err1 => {
+          if (err1) {
+            res.json({
+              status: 1,
+              msg: err.message,
+              results: ''
+            })
+          } else {
+            res.json({
+              status: 0,
+              msg: '',
+              results: 'success'
+            })
+          }
+        })
+      }
+    }
+  })
+})
+
 module.exports = router
