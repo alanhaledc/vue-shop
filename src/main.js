@@ -4,6 +4,7 @@ import router from './router'
 import axios from 'axios'
 import LazyLoad from 'vue-lazyload'
 import infiniteScroll from 'vue-infinite-scroll'
+import store from './store'
 
 import './assets/css/base.css'
 import './assets/css/product.css'
@@ -23,5 +24,6 @@ Vue.use(LazyLoad, {
 new Vue({
   el: '#app',
   router,
+  store,
   render: h => h(App)
 })
