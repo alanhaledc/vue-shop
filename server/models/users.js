@@ -5,7 +5,32 @@ const userSchema = new Schema({
   userId: String,
   userName: String,
   userPwd: String,
-  orderList: Array,
+  orderList: [
+    {
+      orderId: String,
+      orderTotalPrice: Number,
+      addressInfo: {
+        addressId: String,
+        userName: String,
+        streetName: String,
+        postCode: String,
+        tel: String,
+        isDefault: Boolean
+      },
+      orderStatus: Number,
+      goodList: [
+        {
+          productId: String,
+          productName: String,
+          salePrice: Number,
+          productImage: String,
+          productNum: String,
+          checked: Boolean
+        }
+      ],
+      createDate: String
+    }
+  ],
   cartList: [
     {
       productId: String,
