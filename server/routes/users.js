@@ -2,7 +2,7 @@ const express = require('express')
 const router = express.Router()
 
 const Users = require('../models/users')
-
+const farmetDate = require('../utils/util')
 router.get('/', (req, res, next) => {
   res.send('respond with a resource')
 })
@@ -90,6 +90,38 @@ router.get('/cart', (req, res, next) => {
           status: 0,
           msg: '',
           results: doc.cartList
+        })
+      }
+    }
+  })
+})
+
+// 获取购物车商品数量
+router.get('/cartCount', (req, res, next) => {
+  const uertId = req.cookies.userId
+  Users.findOne({userId: uertId}, (err, usersDoc) => {
+    if (err) {
+      res.json({
+        status: 1,
+        msg: err.message,
+        results: ''
+      })
+    } else {
+      if (usersDoc.cartList.length) {
+        let cartCount = 0
+        usersDoc.cartList.forEach(item => {
+          cartCount += parseInt(item.productNum)
+        })
+        res.json({
+          status: 0,
+          msg: '',
+          results: cartCount
+        })
+      } else {
+        res.json({
+          status: 0,
+          msg: '',
+          results: 0
         })
       }
     }
@@ -303,6 +335,109 @@ router.post('/address/setDefault', (req, res, next) => {
               results: 'success'
             })
           }
+        })
+      }
+    }
+  })
+})
+
+// 生成订单
+router.post('/payment', (req, res, next) => {
+  let userId = req.cookies.userId
+  let addressId = req.body.addressId
+  let orderTotalPrice = req.body.orderTotalPrice
+
+  Users.findOne({userId: userId}, (err, usersDoc) => {
+    if (err) {
+      res.json({
+        status: 1,
+        msg: err.message,
+        results: ''
+      })
+    } else {
+      let address = ''
+      usersDoc.addressList.forEach(item => {
+        if (item._id.toString() === addressId) {
+          address = item
+        }
+      })
+      const goodList = usersDoc.cartList.filter(item => {
+        return item.checked === true
+      })
+
+      const platform = '666'
+      const r1 = Math.floor(Math.random() * 10)
+      const r2 = Math.floor(Math.random() * 10)
+      const sysDate = farmetDate(new Date(), 'yyyyMMddhhmmss')
+      const createDate = farmetDate(new Date(), 'yyyy-MM-dd hh:mm:ss')
+      const orderId = platform + r1 + sysDate + r2
+      const order = {
+        orderId,
+        orderTotalPrice,
+        addressInfo: address,
+        orderStatus: 1,
+        goodList,
+        createDate
+      }
+      usersDoc.orderList.push(order)
+      usersDoc.save(err1 => {
+        if (err1) {
+          res.json({
+            status: 1,
+            msg: err.message,
+            results: ''
+          })
+        } else {
+          res.json({
+            status: 0,
+            msg: '',
+            results: {
+              orderId,
+              orderTotalPrice
+            }
+          })
+        }
+      })
+    }
+  })
+})
+
+// 获取订单详情
+router.get('/orderDetail', (req, res, next) => {
+  const userId = req.cookies.userId
+  const orderId = req.param('orderId')
+  console.log(orderId)
+
+  Users.findOne({userId: userId}, (err, usersDoc) => {
+    if (err) {
+      res.json({
+        status: 1,
+        msg: err.message,
+        results: ''
+      })
+    } else {
+      if (usersDoc.orderList.length) {
+        const OrderIndex = usersDoc.orderList.findIndex(item => {
+          return item.orderId === orderId
+        })
+        if (OrderIndex > -1) {
+          res.json({
+            status: 0,
+            msg: '',
+            results: usersDoc.orderList[OrderIndex]
+          })
+        } else {
+          res.json({
+            status: 1,
+            msg: '无此订单',
+            results: ''
+          })
+        }
+      } else {
+        res.json({
+          status: 1,
+          msg: '当前用户未创建订单',
+          results: ''
         })
       }
     }
