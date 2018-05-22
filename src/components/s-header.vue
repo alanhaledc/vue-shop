@@ -31,7 +31,7 @@
     <div class="navbar">
       <div class="navbar-left-container">
         <a href="/">
-          <img class="navbar-brand-logo" src="../assets/logo.png">
+          <img class="navbar-brand-logo" src="../assets/logo.png" width="50" height="50">
         </a>
       </div>
       <div class="navbar-right-container" style="display: flex;">
@@ -40,12 +40,12 @@
           <a href="javascript:void(0)" class="navbar-link" @click="loginModalFlag=true" v-if="!nickName">Login</a>
           <a href="javascript:void(0)" class="navbar-link" v-else @click="logout">Logout</a>
           <div class="navbar-cart-container">
-            <span class="navbar-cart-count"></span>
-            <a class="navbar-link navbar-cart-link" href="/#/cart">
+            <span class="navbar-cart-count" v-show="cartCount" v-text="cartCount"></span>
+            <router-link class="navbar-link navbar-cart-link" to="/cart">
               <svg class="navbar-cart-logo" width="30" height="30">
                 <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#icon-cart"></use>
               </svg>
-            </a>
+            </router-link>
           </div>
         </div>
       </div>
@@ -86,6 +86,8 @@
 </template>
 
 <script type="text/ecmascript-6">
+  import {mapGetters, mapMutations} from 'vuex'
+
   const ERR_OK = 0
 
   export default {
@@ -94,12 +96,14 @@
         userName: '',
         userPwd: '',
         errorTip: false,
-        loginModalFlag: false,
-        nickName: ''
+        loginModalFlag: false
       }
     },
     mounted() {
       this._checkLogin()
+    },
+    computed: {
+      ...mapGetters(['nickName', 'cartCount'])
     },
     methods: {
       login() {
@@ -114,7 +118,8 @@
           if (res.data.status === ERR_OK) {
             this.errorTip = false
             this.loginModalFlag = false
-            this.nickName = res.data.results.userName
+            // this.nickName = res.data.results.userName
+            this.setNickName(res.data.results.userName)
           } else {
             this.errorTip = true
           }
@@ -123,21 +128,103 @@
       logout() {
         this.$axios.post('/users/logout').then((res) => {
           if (res.data.status === ERR_OK) {
-            this.nickName = ''
+            // this.nickName = ''
+            this.setNickName('')
           }
         })
       },
       _checkLogin() {
         this.$axios.get('/users/checkLogin').then((res) => {
           if (res.data.status === ERR_OK) {
-            this.nickName = res.data.results
+            // this.nickName = res.data.results
+            this.setNickName(res.data.results)
           }
         })
-      }
+      },
+      ...mapMutations(['setNickName'])
     }
   }
 </script>
 
-<style scoped lang="stylus" type="text/stylus" rel="stylesheet/stylus">
+<style>
+  .header {
+    width: 100%;
+    background-color: white;
+    font-family: "moderat", sans-serif;
+    font-size: 16px;
+  }
 
+  .navbar {
+    display: flex;
+    justify-content: space-between;
+    align-content: center;
+    width: 100%;
+    height: 70px;
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 5px 20px 10px 20px;
+  }
+
+  .navbar-left-container {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    margin-left: -20px;
+  }
+
+  .navbar-brand-logo {
+    /*width: 120px;*/
+  }
+
+  .header a, .footer a {
+    color: #666;
+    text-decoration: none;
+  }
+
+  a {
+    -webkit-transition: color .3s ease-out;
+    transition: color .3s ease-out;
+  }
+
+  .navbar-right-container {
+    display: none;
+    justify-content: flex-start;
+    align-items: center;
+  }
+
+  .navbar-menu-container {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    padding-top: 10px;
+  }
+
+  .navbar-link {
+    padding-left: 15px;
+  }
+
+  .navbar-cart-container {
+    position: relative;
+  }
+
+  .navbar-cart-count {
+    justify-content: center;
+    align-items: center;
+    position: absolute;
+    top: -9px;
+    right: -11px;
+    width: 20px;
+    border-radius: 10px;
+    color: white;
+    background-color: #eb767d;
+    font-size: 16px;
+    font-weight: bold;
+    text-align: center;
+  }
+
+  .navbar-cart-logo {
+    width: 25px;
+    height: 25px;
+    transform: scaleX(-1);
+  }
 </style>
