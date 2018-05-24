@@ -235,7 +235,7 @@
           })
         }
         this.checkedAllFlag = !this.checkedAllFlag
-        this.$axios.post('/users/cart/checkedALL', {
+        this.$axios.post('/users/cart/checkedAll', {
           checkedAllFlag: this.checkedAllFlag
         }).then(res => {
           if (res.data.status === ERR_OK) {
