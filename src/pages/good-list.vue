@@ -68,7 +68,7 @@
       <div slot="btn-group">
         <a class="btn btn--m" @click="mdShow=false">关闭</a>
       </div>
-    </model>
+    </model>`
     <model :mdShow="mdShowCart" @close="closeModel">
       <p slot="message">
         <svg class="icon icon-status-ok">
@@ -90,6 +90,7 @@
   import SFooter from 'components/s-footer'
   import Tab from 'components/tab'
   import Model from 'components/model'
+  import {mapMutations} from 'vuex'
 
   const ERR_OK = 0
 
@@ -124,11 +125,13 @@
         busy: false,
         loading: false,
         mdShow: false,
-        mdShowCart: false
+        mdShowCart: false,
+        cartList: []
       }
     },
     created() {
       this._getGoodsList(false)
+      this._getCartList()
     },
     methods: {
       showFilterPop() {
@@ -167,6 +170,7 @@
             this.mdShow = true
           }
         })
+        this._getCartList()
       },
       closeModel() {
         this.mdShow = false
@@ -198,6 +202,26 @@
             }
           }
         })
+      },
+      _getCartList() {
+        this.$axios.get('/users/cart').then((res) => {
+          if (res.data.status === ERR_OK) {
+            this.cartList = res.data.results
+          }
+        })
+      },
+      _getCartCount() {
+        this.$axios.get('/users/cartCount').then(res => {
+          if (res.data.status === ERR_OK) {
+            this.setCartCount(res.data.results)
+          }
+        })
+      },
+      ...mapMutations(['setCartCount'])
+    },
+    watch: {
+      cartList() {
+        this._getCartCount()
       }
     },
     components: {
