@@ -1,447 +1,362 @@
-const express = require('express')
-const router = express.Router()
-
+const router = require('koa-router')()
 const Users = require('../models/users')
 const farmetDate = require('../utils/util')
-router.get('/', (req, res, next) => {
-  res.send('respond with a resource')
+
+router.prefix('/users')
+
+router.get('/', function (ctx, next) {
+  ctx.body = 'this is a users response!'
 })
 
-// 登录账户
-router.post('/login', (req, res, next) => {
-  let params = {
-    userName: req.body.userName,
-    userPwd: req.body.userPwd
-  }
-
-  Users.findOne(params, (err, doc) => {
-    if (err) {
-      res.json({
-        status: 1,
-        msg: err.message
-      })
-    } else {
-      if (doc) {
-        res.cookie('userId', doc.userId, {
-          path: '/',
-          maxAge: 1000 * 60 * 60 * 24 * 7
-        })
-        res.cookie('userName', doc.userName, {
-          path: '/',
-          maxAge: 1000 * 60 * 60 * 24 * 7
-        })
-        // req.session.user = doc
-        res.json({
-          status: 0,
-          msg: '',
-          results: {
-            userName: doc.userName
-          }
-        })
+// 用户登录
+router.post('/login', async ctx => {
+  try {
+    let params = {
+      userName: ctx.request.body.userName,
+      userPwd: ctx.request.body.userPwd
+    }
+    let userDoc = await Users.findOne(params)
+    ctx.cookies.set('userId', userDoc.userId, {
+      path: '/',
+      maxAge: 1000 * 60 * 60 * 24 * 7
+    })
+    ctx.cookies.set('userName', userDoc.userName, {
+      path: '/',
+      maxAge: 1000 * 60 * 60 * 24 * 7
+    })
+    ctx.body = {
+      status: 0,
+      msg: '',
+      results: {
+        userName: userDoc.userName
       }
     }
-  })
+  } catch (err) {
+    ctx.body = {
+      status: 1,
+      msg: err.message
+    }
+  }
 })
 
-// 登出账户
-router.post('/logout', (req, res, next) => {
-  res.cookie('userId', '', {
+// 用户登出
+router.post('/logout', ctx => {
+  ctx.cookies.set('userId', '', {
     path: '/',
     maxAge: -1
   })
-  // res.clearCookie('userId')
-  res.json({
+  ctx.body = {
     status: 0,
     msg: '',
     results: ''
-  })
+  }
 })
 
 // 检查登录状态
-router.get('/checkLogin', (req, res, next) => {
-  if (req.cookies.userId) {
-    res.json({
+router.get('/checkLogin', ctx => {
+  if (ctx.cookies.get('userId')) {
+    ctx.body = {
       status: 0,
       msg: '',
-      results: req.cookies.userName || ''
-    })
+      results: ctx.cookies.get('userName') || ''
+    }
   } else {
-    res.json({
+    ctx.body = {
       status: 1,
-      msg: '当前未登录',
-      results: ''
-    })
+      msg: '当前未登录'
+    }
   }
 })
 
 // 获取购物车列表
-router.get('/cart', (req, res, next) => {
-  let userId = req.cookies.userId
-  Users.findOne({userId: userId}, (err, doc) => {
-    if (err) {
-      res.json({
-        status: 1,
-        msg: err.message,
-        results: ''
-      })
-    } else {
-      if (doc) {
-        res.json({
-          status: 0,
-          msg: '',
-          results: doc.cartList
-        })
-      }
+router.get('/cart', async ctx => {
+  try {
+    const userId = ctx.cookies.get('userId')
+    let userDoc = await Users.findOne({userId})
+    ctx.body = {
+      status: 0,
+      msg: '',
+      results: userDoc.cartList
     }
-  })
+  } catch (err) {
+    ctx.body = {
+      status: 1,
+      msg: '当前未登录'
+    }
+  }
 })
 
 // 获取购物车商品数量
-router.get('/cartCount', (req, res, next) => {
-  const uertId = req.cookies.userId
-  Users.findOne({userId: uertId}, (err, usersDoc) => {
-    if (err) {
-      res.json({
-        status: 1,
-        msg: err.message,
-        results: ''
+router.get('/cartCount', async ctx => {
+  try {
+    const userId = ctx.cookies.get('userId')
+    let userDoc = await Users.findOne({userId})
+    let cartCount = 0
+    if (userDoc.cartList.length) {
+      userDoc.cartList.forEach(item => {
+        cartCount += parseInt(item.productNum)
       })
-    } else {
-      if (usersDoc.cartList.length) {
-        let cartCount = 0
-        usersDoc.cartList.forEach(item => {
-          cartCount += parseInt(item.productNum)
-        })
-        res.json({
-          status: 0,
-          msg: '',
-          results: cartCount
-        })
-      } else {
-        res.json({
-          status: 0,
-          msg: '',
-          results: 0
-        })
-      }
     }
-  })
+    ctx.body = {
+      status: 0,
+      msg: '',
+      results: cartCount
+    }
+  } catch (err) {
+    ctx.body = {
+      status: 1,
+      msg: err.message
+    }
+  }
 })
 
 // 删除购物车商品
-router.post('/cart/del', (req, res, next) => {
-  const userId = req.cookies.userId
-  const productId = req.body.productId
-
-  Users.update({userId: userId}, {
-    $pull: {
-      cartList: {productId: productId}
+router.post('/cart/del', async ctx => {
+  try {
+    const userId = ctx.cookies.get('userId')
+    const productId = ctx.request.body.productId
+    await Users.update({userId}, {
+      $pull: {
+        cartList: {productId}
+      }
+    })
+    ctx.body = {
+      status: 0,
+      msg: '',
+      results: 'success'
     }
-  }, (err) => {
-    if (err) {
-      res.json({
-        status: 1,
-        msg: '',
-        results: ''
-      })
-    } else {
-      res.json({
-        status: 0,
-        msg: '',
-        results: 'success'
-      })
+  } catch (err) {
+    ctx.body = {
+      status: 1,
+      msg: err.message
     }
-  })
+  }
 })
 
 // 编辑购物车商品
-router.post('/cart/edit', (req, res, next) => {
-  const uertId = req.cookies.userId
-  const productId = req.body.productId
-  const productNum = req.body.productNum
-  const checked = req.body.checked
-
-  Users.update({userId: uertId, 'cartList.productId': productId}, {
-    'cartList.$.productNum': productNum,
-    'cartList.$.checked': checked
-  }, (err) => {
-    if (err) {
-      res.json({
-        status: 1,
-        msg: '',
-        results: ''
-      })
-    } else {
-      res.json({
-        status: 0,
-        msg: '',
-        results: 'success'
-      })
+router.post('/cart/edit', async ctx => {
+  try {
+    const userId = ctx.cookies.get('userId')
+    const productId = ctx.request.body.productId
+    const productNum = ctx.request.body.productNum
+    const checked = ctx.request.body.checked
+    await Users.update({userId, 'cartList.productId': productId}, {
+      'cartList.$.productNum': productNum,
+      'cartList.$.checked': checked
+    })
+    ctx.body = {
+      status: 0,
+      msg: '',
+      results: 'success'
     }
-  })
+  } catch (err) {
+    ctx.body = {
+      status: 1,
+      msg: err.message
+    }
+  }
 })
 
 // 检查是否全选
-router.post('/cart/checkedALL', (req, res, next) => {
-  const userId = req.cookies.userId
-  const checkedAllFlag = req.body.checkedAllFlag
-  Users.findOne({userId: userId}, (err, usersDoc) => {
-    if (err) {
-      res.json({
-        status: 1,
-        msg: err.message,
-        results: ''
+router.post('/cart/checkedAll', async ctx => {
+  try {
+    const userId = ctx.cookies.get('userId')
+    const checkedAllFlag = ctx.request.body.checkedAllFlag
+    let userDoc = await Users.findOne({userId})
+    if (userDoc.cartList.length) {
+      userDoc.cartList.forEach(item => {
+        item.checked = checkedAllFlag
       })
-    } else {
-      if (usersDoc) {
-        usersDoc.cartList.forEach(item => {
-          item.checked = checkedAllFlag
-        })
-        usersDoc.save(err1 => {
-          if (err1) {
-            res.json({
-              status: 1,
-              msg: err.message,
-              results: ''
-            })
-          } else {
-            res.json({
-              status: 0,
-              msg: '',
-              results: 'success'
-            })
-          }
-        })
-      }
-    }
-  })
-})
-
-// 获取地址列表
-router.get('/address', (req, res, next) => {
-  const userId = req.cookies.userId
-  Users.findOne({userId: userId}, (err, doc) => {
-    if (err) {
-      res.json({
-        status: 1,
-        message: err.message,
-        results: ''
-      })
-    } else {
-      res.json({
-        status: 0,
-        message: '',
-        results: doc.addressList
-      })
-    }
-  })
-})
-
-// 删除地址
-router.post('/address/del', (req, res, next) => {
-  const userId = req.cookies.userId
-  const addressId = req.body.addressId
-
-  Users.update({userId: userId}, {
-    $pull: {
-      addressList: {_id: addressId}
-    }
-  }, (err) => {
-    if (err) {
-      res.json({
-        status: 1,
-        msg: '',
-        results: ''
-      })
-    } else {
-      res.json({
+      await userDoc.save()
+      ctx.body = {
         status: 0,
         msg: '',
         results: 'success'
-      })
+      }
     }
-  })
+  } catch (err) {
+    ctx.body = {
+      status: 1,
+      msg: err.message
+    }
+  }
+})
+
+// 获取地址列表
+router.get('/address', async ctx => {
+  try {
+    const userId = ctx.cookies.get('userId')
+    let userDoc = await Users.findOne({userId})
+    ctx.body = {
+      status: 0,
+      msg: '',
+      results: userDoc.addressList
+    }
+  } catch (err) {
+    ctx.body = {
+      status: 1,
+      msg: err.message
+    }
+  }
+})
+
+// 删除地址
+router.post('/address/del', async ctx => {
+  try {
+    const userId = ctx.cookies.get('userId')
+    const addressId = ctx.request.body.addressId
+    await Users.update({userId}, {
+      $pull: {
+        addressList: {_id: addressId}
+      }
+    })
+    ctx.body = {
+      status: 0,
+      msg: '',
+      results: 'success'
+    }
+  } catch (err) {
+    ctx.body = {
+      status: 1,
+      msg: err.message
+    }
+  }
 })
 
 // 新增地址
-router.post('/address/add', (req, res, next) => {
-  let userId = req.cookies.userId
-  let newAddress = req.body.newAddress
-  Users.findOne({userId: userId}, (err, usersDoc) => {
-    if (err) {
-      res.json({
-        status: 1,
-        msg: err.message,
-        results: ''
-      })
-    } else {
-      if (usersDoc) {
-        usersDoc.addressList.push({
-          ...newAddress,
-          isDefault: false
-        })
-        usersDoc.save(err => {
-          if (err) {
-            res.json({
-              status: 1,
-              msg: err.message,
-              results: ''
-            })
-          } else {
-            res.json({
-              status: 0,
-              msg: '',
-              results: 'success'
-            })
-          }
-        })
-      }
+router.post('/address/add', async ctx => {
+  try {
+    const userId = ctx.cookies.get('userId')
+    const newAddress = ctx.request.body.newAddress
+    let userDoc = await Users.findOne({userId})
+    userDoc.addressList.push({
+      ...newAddress,
+      isDefault: false
+    })
+    await userDoc.save()
+    ctx.body = {
+      status: 0,
+      msg: '',
+      results: 'success'
     }
-  })
+  } catch (err) {
+    ctx.body = {
+      status: 1,
+      msg: err.message()
+    }
+  }
 })
 
 // 设置默认地址
-router.post('/address/setDefault', (req, res, next) => {
-  const userId = req.cookies.userId
-  const id = req.body.id
-
-  Users.findOne({userId: userId}, (err, usersDoc) => {
-    if (err) {
-      res.json({
-        status: 1,
-        msg: err.message,
-        results: ''
-      })
-    } else {
-      if (usersDoc) {
-        usersDoc.addressList.forEach(item => {
-          if (item._id.toString() === id) {
-            item.isDefault = true
-          } else {
-            item.isDefault = false
-          }
-        })
-        usersDoc.save(err1 => {
-          if (err1) {
-            res.json({
-              status: 1,
-              msg: err.message,
-              results: ''
-            })
-          } else {
-            res.json({
-              status: 0,
-              msg: '',
-              results: 'success'
-            })
-          }
-        })
+router.post('/address/setDefault', async ctx => {
+  try {
+    const userId = ctx.cookies.get('userId')
+    const id = ctx.request.body.id
+    let userDoc = await Users.findOne({userId})
+    userDoc.addressList.forEach(item => {
+      if (item._id.toString() === id) {
+        item.isDefault = true
+      } else {
+        item.isDefault = false
       }
+    })
+    await userDoc.save()
+    ctx.body = {
+      status: 0,
+      msg: '',
+      results: 'success'
     }
-  })
+  } catch (err) {
+    ctx.body = {
+      status: 1,
+      msg: err.message
+    }
+  }
 })
 
 // 生成订单
-router.post('/payment', (req, res, next) => {
-  let userId = req.cookies.userId
-  let addressId = req.body.addressId
-  let orderTotalPrice = req.body.orderTotalPrice
-
-  Users.findOne({userId: userId}, (err, usersDoc) => {
-    if (err) {
-      res.json({
-        status: 1,
-        msg: err.message,
-        results: ''
-      })
-    } else {
-      let address = ''
-      usersDoc.addressList.forEach(item => {
-        if (item._id.toString() === addressId) {
-          address = item
-        }
-      })
-      const goodList = usersDoc.cartList.filter(item => {
-        return item.checked === true
-      })
-
-      const platform = '666'
-      const r1 = Math.floor(Math.random() * 10)
-      const r2 = Math.floor(Math.random() * 10)
-      const sysDate = farmetDate(new Date(), 'yyyyMMddhhmmss')
-      const createDate = farmetDate(new Date(), 'yyyy-MM-dd hh:mm:ss')
-      const orderId = platform + r1 + sysDate + r2
-      const order = {
-        orderId,
-        orderTotalPrice,
-        addressInfo: address,
-        orderStatus: 1,
-        goodList,
-        createDate
+router.post('/payment', async ctx => {
+  try {
+    const userId = ctx.cookies.get('userId')
+    const addressId = ctx.request.body.addressId
+    const orderTotalPrice = ctx.request.body.orderTotalPrice
+    let userDoc = await Users.findOne({userId})
+    let address = ''
+    userDoc.addressList.forEach(item => {
+      if (item._id.toString() === addressId) {
+        address = item
       }
-      usersDoc.orderList.push(order)
-      usersDoc.save(err1 => {
-        if (err1) {
-          res.json({
-            status: 1,
-            msg: err.message,
-            results: ''
-          })
-        } else {
-          res.json({
-            status: 0,
-            msg: '',
-            results: {
-              orderId,
-              orderTotalPrice
-            }
-          })
-        }
-      })
+    })
+    const goodList = userDoc.cartList.filter(item => {
+      return item.checked === true
+    })
+
+    const platform = '666'
+    const r1 = Math.floor(Math.random() * 10)
+    const r2 = Math.floor(Math.random() * 10)
+    const sysDate = farmetDate(new Date(), 'yyyyMMddhhmmss')
+    const createDate = farmetDate(new Date(), 'yyyy-MM-dd hh:mm:ss')
+    const orderId = platform + r1 + sysDate + r2
+    const order = {
+      orderId,
+      orderTotalPrice,
+      addressInfo: address,
+      orderStatus: 1,
+      goodList,
+      createDate
     }
-  })
+    userDoc.orderList.push(order)
+    await userDoc.save()
+    ctx.body = {
+      status: 0,
+      msg: '',
+      results: {
+        orderId,
+        orderTotalPrice
+      }
+    }
+  } catch (err) {
+    ctx.body = {
+      status: 1,
+      msg: err.message()
+    }
+  }
 })
 
-// 获取订单详情
-router.get('/orderDetail', (req, res, next) => {
-  const userId = req.cookies.userId
-  const orderId = req.param('orderId')
-  console.log(orderId)
-
-  Users.findOne({userId: userId}, (err, usersDoc) => {
-    if (err) {
-      res.json({
-        status: 1,
-        msg: err.message,
-        results: ''
+// 获得订单详情
+router.get('/orderDetail', async ctx => {
+  try {
+    const userId = ctx.cookies.get('userId')
+    const orderId = ctx.query.orderId
+    let userDoc = await Users.findOne({userId})
+    if (userDoc.orderList.length) {
+      const OrderIndex = userDoc.orderList.findIndex(item => {
+        return item.orderId === orderId
       })
-    } else {
-      if (usersDoc.orderList.length) {
-        const OrderIndex = usersDoc.orderList.findIndex(item => {
-          return item.orderId === orderId
-        })
-        if (OrderIndex > -1) {
-          res.json({
-            status: 0,
-            msg: '',
-            results: usersDoc.orderList[OrderIndex]
-          })
-        } else {
-          res.json({
-            status: 1,
-            msg: '无此订单',
-            results: ''
-          })
+      if (OrderIndex > -1) {
+        ctx.body = {
+          status: 0,
+          msg: '',
+          results: userDoc.orderList[OrderIndex]
         }
       } else {
-        res.json({
+        ctx.body = {
           status: 1,
-          msg: '当前用户未创建订单',
+          msg: '无此订单',
           results: ''
-        })
+        }
+      }
+    } else {
+      ctx.body = {
+        status: 1,
+        msg: '当前用户未创建订单'
       }
     }
-  })
+  } catch (err) {
+    ctx.body = {
+      status: 1,
+      msg: err.message
+    }
+  }
 })
-
 module.exports = router

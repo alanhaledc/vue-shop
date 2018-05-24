@@ -1,64 +1,70 @@
-const createError = require('http-errors')
-const express = require('express')
-const path = require('path')
-const cookieParser = require('cookie-parser')
-const logger = require('morgan')
-const ejs = require('ejs')
+const Koa = require('koa')
+const app = new Koa()
+const views = require('koa-views')
+const json = require('koa-json')
+const onerror = require('koa-onerror')
+const bodyparser = require('koa-bodyparser')
+const logger = require('koa-logger')
 
-const indexRouter = require('./routes/index')
-const usersRouter = require('./routes/users')
-const goodsRouter = require('./routes/goods')
+const index = require('./routes/index')
+const users = require('./routes/users')
+const goods = require('./routes/goods')
 
-const app = express()
+// error handler
+onerror(app)
 
-// view engine setup
-app.set('views', path.join(__dirname, 'views'))
-// app.set('view engine', 'jade')
-app.engine('.html', ejs.__express)
-app.set('view engine', 'html')
+// middlewares
+app.use(bodyparser({
+  enableTypes: ['json', 'form', 'text']
+}))
+app.use(json())
+app.use(logger())
+app.use(require('koa-static')(__dirname + '/public'))
 
-app.use(logger('dev'))
-app.use(express.json())
-app.use(express.urlencoded({extended: false}))
-app.use(cookieParser())
-app.use(express.static(path.join(__dirname, 'public')))
-// app.use(express.static(path.join(__dirname, 'views')))
+app.use(views(__dirname + '/views', {
+  extension: 'html'
+}))
+
+// logger
+app.use(async (ctx, next) => {
+  const start = new Date()
+  await next()
+  const ms = new Date() - start
+  console.log(`${ctx.method} ${ctx.url} - ${ms}ms`)
+})
 
 // 未登录拦截
-app.use((req, res, next) => {
-  if (req.cookies.userId) {
-    next()
-  } else {
-    if (req.originalUrl === '/users/login' || req.originalUrl === '/users/logout' || req.originalUrl.indexOf('/goods/list') > -1) {
-      next()
+app.use(async (ctx, next) => {
+  try {
+    if (ctx.cookies.get('userId')) {
+      await next()
     } else {
-      res.json({
-        status: 10001,
-        msg: '当前未登录',
-        results: ''
-      })
+      if (ctx.url === '/users/login' || ctx.url === '/users/logout' || ctx.url.indexOf('/goods/list') > -1) {
+        await next()
+      } else {
+        ctx.body = {
+          status: 10001,
+          msg: '当前未登录',
+          results: ''
+        }
+      }
+    }
+  } catch (err) {
+    ctx.body = {
+      status: 1,
+      msg: err.message
     }
   }
 })
 
-app.use('/', indexRouter)
-app.use('/users', usersRouter)
-app.use('/goods', goodsRouter)
+// routes
+app.use(index.routes()).use(index.allowedMethods())
+app.use(users.routes()).use(users.allowedMethods())
+app.use(goods.routes()).use(goods.allowedMethods())
 
-// catch 404 and forward to error handler
-app.use(function (req, res, next) {
-  next(createError(404))
-})
-
-// error handler
-app.use(function (err, req, res, next) {
-  // set locals, only providing error in development
-  res.locals.message = err.message
-  res.locals.error = req.app.get('env') === 'development' ? err : {}
-
-  // render the error page
-  res.status(err.status || 500)
-  res.render('error')
+// error-handling
+app.on('error', (err, ctx) => {
+  console.error('server error', err, ctx)
 })
 
 module.exports = app
