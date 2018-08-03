@@ -1,23 +1,11 @@
-const router = require('koa-router')()
-const mongoose = require('mongoose')
+const Router = require('koa-router')
 
-router.prefix('/goods')
+const Goods = require('../db/models/goods')
+const User = require('../db/models/user')
+const {successResponse, failResponse} = require('../utils')
 
-const Goods = require('../models/goods')
-const Users = require('../models/users')
-
-mongoose.connect('mongodb://127.0.0.1:27017/vue-shop')
-
-mongoose.connection.on('connected', () => {
-  console.log('MongoDB connected success.')
-})
-
-mongoose.connection.on('error', () => {
-  console.log('MongoDB connected fail.')
-})
-
-mongoose.connection.on('disconnected', () => {
-  console.log('MongoDB connected disconnected.')
+const router = new Router({
+  prefix: '/api/goods'
 })
 
 // 获取商品列表
@@ -31,89 +19,82 @@ router.get('/list', async ctx => {
 
     let params = {}
     let priceGt = ''
-    let priceLte = ''
+    let pricrLte = ''
 
-    if (priceLevel !== 'all') {
+    if (priceLevel) {
       switch (priceLevel) {
         case '0':
           priceGt = 0
-          priceLte = 100
+          pricrLte = 100000000
           break
         case '1':
-          priceGt = 100
-          priceLte = 500
+          priceGt = 0
+          pricrLte = 100
           break
         case '2':
-          priceGt = 500
-          priceLte = 1000
+          priceGt = 100
+          pricrLte = 500
           break
         case '3':
+          priceGt = 500
+          pricrLte = 1000
+          break
+        case '4':
           priceGt = 1000
-          priceLte = 5000
+          pricrLte = 5000
           break
       }
+
       params = {
         salePrice: {
+          // 大于 >
           $gt: priceGt,
-          $lte: priceLte
+          // 小于和等于 <=
+          $lte: pricrLte
         }
       }
     }
-    let productsDoc = await Goods.find(params).skip(skip).limit(pageSize).sort({salePrice: sort})
-    ctx.body = {
-      status: 0,
-      msg: '',
-      results: {
-        count: productsDoc.length,
-        list: productsDoc
-      }
-    }
+
+    const goods = await Goods.find(params).skip(skip).limit(pageSize).sort({salePrice: sort})
+    ctx.body = successResponse({
+      count: goods.length,
+      list: goods
+    })
   } catch (err) {
-    ctx.body = {
-      status: 1,
-      msg: err.message
-    }
+    ctx.status = 500
+    ctx.body = failResponse(err.message)
   }
 })
 
 // 加入购物车
-router.post('/addCart', async ctx => {
+router.post('/cart/add', async ctx => {
   try {
     const userId = '100000077'
     const productId = ctx.request.body.productId
 
-    let userDoc = await Users.findOne({userId})
-    let goodsItem = ''
-    userDoc.cartList.forEach(item => {
+    const user = await User.findOne({userId})
+    let goods = ''
+    // 查看购物车中是否有这个产品
+    user.cartList.forEach(item => {
       if (item.productId === productId) {
-        goodsItem = item
+        goods = item
         item.productNum += 1
       }
     })
-    if (goodsItem) {
-      await userDoc.save()
-      ctx.body = {
-        status: 0,
-        msg: '',
-        results: 'success'
-      }
+    if (goods) {
+      await user.save()
+      ctx.body = successResponse('success')
     } else {
-      let productDoc = await Goods.findOne({productId: productId})
-      productDoc.productNum += 1
-      productDoc.checked = true
-      userDoc.cartList.push(productDoc)
-      await userDoc.save()
-      ctx.body = {
-        status: 0,
-        msg: '',
-        results: 'success'
-      }
+      const newGoods = await Goods.findOne({productId})
+      newGoods.productNum += 1
+      newGoods.isChecked = true
+      user.cartList.push(newGoods)
+      await user.save()
+      ctx.body = successResponse(('success'))
     }
   } catch (err) {
-    ctx.body = {
-      status: 1,
-      msg: err.message
-    }
+    ctx.status = 500
+    ctx.body = failResponse(err.message)
   }
 })
 

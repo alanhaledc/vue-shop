@@ -1,19 +1,11 @@
-const router = require('koa-router')()
+const Router = require('koa-router')
 
-router.get('/', async (ctx, next) => {
-  await ctx.render('index', {
-    title: 'Hello Koa 2!'
-  })
-})
+const goodsRouter = require('./goods')
+const userRouter = require('./user')
 
-router.get('/string', async (ctx, next) => {
-  ctx.body = 'koa2 string'
-})
+const router = new Router()
 
-router.get('/json', async (ctx, next) => {
-  ctx.body = {
-    title: 'koa2 json'
-  }
-})
+router.use(goodsRouter.routes()).use(goodsRouter.allowedMethods())
+router.use(userRouter.routes()).use(userRouter.allowedMethods())
 
 module.exports = router

@@ -1,39 +1,25 @@
 import Vue from 'vue'
-import Router from 'vue-router'
-import GoodList from 'pages/good-list'
-import Cart from 'pages/cart'
-import Address from 'pages/address'
-import OrderConfirm from 'pages/order-confirm'
-import OrderSuccess from 'pages/order-success'
+import VueRouter from 'vue-router'
 
-Vue.use(Router)
+import routes from './routes'
 
-export default new Router({
-  routes: [
-    {
-      path: '/',
-      name: 'GoodList',
-      component: GoodList
-    },
-    {
-      path: '/cart',
-      name: 'Cart',
-      component: Cart
-    },
-    {
-      path: '/address',
-      name: 'Address',
-      component: Address
-    },
-    {
-      path: '/orderConfirm',
-      name: 'OrderConfirm',
-      component: OrderConfirm
-    },
-    {
-      path: '/orderSuccess',
-      name: 'OrderSuccess',
-      component: OrderSuccess
-    }
-  ]
-})
+Vue.use(VueRouter)
+
+/*
+ * If not building with SSR mode, you can
+ * directly export the Router instantiation
+ */
+
+export default function (/* { store, ssrContext } */) {
+  const Router = new VueRouter({
+    scrollBehavior: () => ({ y: 0 }),
+    routes,
+
+    // Leave these as is and change from quasar.conf.js instead!
+    // quasar.conf.js -> build -> vueRouterMode
+    mode: process.env.VUE_ROUTER_MODE,
+    base: process.env.VUE_ROUTER_BASE
+  })
+
+  return Router
+}

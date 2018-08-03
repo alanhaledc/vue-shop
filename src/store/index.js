@@ -1,33 +1,23 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
 
+import goods from './modules/goods'
+import user from './modules/user'
+
 Vue.use(Vuex)
 
-const state = {
-  nickName: '',
-  cartCount: 0
-}
+/*
+ * If not building with SSR mode, you can
+ * directly export the Store instantiation
+ */
 
-const getters = {
-  nickName(state) {
-    return state.nickName
-  },
-  cartCount(state) {
-    return state.cartCount
-  }
-}
+export default function (/* { ssrContext } */) {
+  const Store = new Vuex.Store({
+    modules: {
+      goods,
+      user
+    }
+  })
 
-const mutations = {
-  setNickName(state, name) {
-    state.nickName = name
-  },
-  setCartCount(state, num) {
-    state.cartCount = num
-  }
+  return Store
 }
-
-export default new Vuex.Store({
-  state,
-  getters,
-  mutations
-})

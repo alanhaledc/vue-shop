@@ -1,70 +1,26 @@
-const Koa = require('koa')
-const app = new Koa()
-const views = require('koa-views')
-const json = require('koa-json')
-const onerror = require('koa-onerror')
-const bodyparser = require('koa-bodyparser')
+const Koa = require('Koa')
+const bodyParser = require('koa-bodyparser')
 const logger = require('koa-logger')
+const serve = require('koa-static')
+const path = require('path')
 
-const index = require('./routes/index')
-const users = require('./routes/users')
-const goods = require('./routes/goods')
+const router = require('./routes')
+require('./db/index')
 
-// error handler
-onerror(app)
+const app = new Koa()
 
-// middlewares
-app.use(bodyparser({
-  enableTypes: ['json', 'form', 'text']
-}))
-app.use(json())
 app.use(logger())
-app.use(require('koa-static')(__dirname + '/public'))
+app.use(bodyParser())
+app.use(serve(path.join(__dirname, './static')))
 
-app.use(views(__dirname + '/views', {
-  extension: 'html'
-}))
+app.use(router.routes()).use(router.allowedMethods())
 
-// logger
-app.use(async (ctx, next) => {
-  const start = new Date()
-  await next()
-  const ms = new Date() - start
-  console.log(`${ctx.method} ${ctx.url} - ${ms}ms`)
-})
+const PORT = process.env.PORT || 9096
 
-// 未登录拦截
-app.use(async (ctx, next) => {
-  try {
-    if (ctx.cookies.get('userId')) {
-      await next()
-    } else {
-      if (ctx.url === '/users/login' || ctx.url === '/users/logout' || ctx.url.indexOf('/goods/list') > -1) {
-        await next()
-      } else {
-        ctx.body = {
-          status: 10001,
-          msg: '当前未登录',
-          results: ''
-        }
-      }
-    }
-  } catch (err) {
-    ctx.body = {
-      status: 1,
-      msg: err.message
-    }
+app.listen(PORT, err => {
+  if (err) {
+    console.log(err)
+    return
   }
+  console.log(`Server started at port: ${PORT}!`)
 })
-
-// routes
-app.use(index.routes()).use(index.allowedMethods())
-app.use(users.routes()).use(users.allowedMethods())
-app.use(goods.routes()).use(goods.allowedMethods())
-
-// error-handling
-app.on('error', (err, ctx) => {
-  console.error('server error', err, ctx)
-})
-
-module.exports = app
