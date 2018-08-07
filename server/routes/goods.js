@@ -5,7 +5,7 @@ const User = require('../db/models/user')
 const {successResponse, failResponse} = require('../utils')
 
 const router = new Router({
-  prefix: '/api/goods'
+  prefix: '/goods'
 })
 
 // 获取商品列表
@@ -72,13 +72,13 @@ router.post('/cart/add', async ctx => {
     const userId = '100000077'
     const productId = ctx.request.body.productId
 
-    const user = await User.findOne({userId})
+    const user = await User.findOne({userId}).populate('cartList.goods')
     let goods = ''
     // 查看购物车中是否有这个产品
     user.cartList.forEach(item => {
-      if (item.productId === productId) {
-        goods = item
-        item.productNum += 1
+      if (item.goods.productId === productId) {
+        goods = item.goods
+        item.goodsNum += 1
       }
     })
     if (goods) {
@@ -86,9 +86,13 @@ router.post('/cart/add', async ctx => {
       ctx.body = successResponse('success')
     } else {
       const newGoods = await Goods.findOne({productId})
-      newGoods.productNum += 1
-      newGoods.isChecked = true
-      user.cartList.push(newGoods)
+      const goodsNum = 1
+      const isChecked = true
+      user.cartList.push({
+        goods: newGoods,
+        goodsNum,
+        isChecked
+      })
       await user.save()
       ctx.body = successResponse(('success'))
     }

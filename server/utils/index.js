@@ -24,7 +24,7 @@ const createOrderId = () => {
   const platform = '666'
   const r1 = Math.floor(Math.random() * 10)
   const r2 = Math.floor(Math.random() * 10)
-  const sysDate = moment.format('YYYYMMDDhhmmss')
+  const sysDate = moment().format('YYYYMMDDhhmmss')
   return platform + r1 + sysDate + r2
 }
 

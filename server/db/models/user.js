@@ -15,11 +15,19 @@ const userSchema = new Schema({
         type: ObjectId,
         ref: 'Address'
       },
+      shipInfo: {
+        type: ObjectId,
+        ref: 'Ship'
+      },
       orderStatus: Number,
       goodsList: [
         {
-          type: ObjectId,
-          ref: 'Goods'
+          goods: {
+            type: ObjectId,
+            ref: 'Goods',
+            required: true
+          },
+          goodsNum: Number
         }
       ],
       createDate: {
@@ -30,14 +38,42 @@ const userSchema = new Schema({
   ],
   cartList: [
     {
-      type: ObjectId,
-      ref: 'Goods'
+      goods: {
+        type: ObjectId,
+        ref: 'Goods',
+        required: true
+      },
+      goodsNum: Number,
+      isChecked: {
+        type: Boolean,
+        default: false
+      }
     }
   ],
   addressList: [
     {
-      type: ObjectId,
-      ref: 'Address'
+      recipient: String,
+      streetName: String,
+      postCode: String,
+      phone: String,
+      isDefault: {
+        type: Boolean,
+        default: false
+      },
+      isChecked: {
+        type: Boolean,
+        default: false
+      },
+      meta: {
+        createdAt: {
+          type: Date,
+          default: Date.now()
+        },
+        updateAt: {
+          type: Date,
+          default: Date.now()
+        }
+      }
     }
   ],
   meta: {
@@ -51,5 +87,10 @@ const userSchema = new Schema({
     }
   }
 })
+
+// userSchema.pre('find', function (next) {
+//   this.populate('cartList', 'goods')
+//   next()
+// })
 
 module.exports = mongoose.model('User', userSchema)

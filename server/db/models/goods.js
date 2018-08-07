@@ -7,11 +7,6 @@ const goodsSchema = new Schema({
   salePrice: Number,
   productImage: String,
   productUrl: String,
-  productNum: Number,
-  isChecked: {
-    type: Boolean,
-    default: false
-  },
   meta: {
     createdAt: {
       type: Date,

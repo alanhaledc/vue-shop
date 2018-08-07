@@ -1,28 +1,30 @@
 const Router = require('koa-router')
 
 const User = require('../db/models/user')
+require('../db/models/goods')
+const Ship = require('../db/models/ship')
 
 const {successResponse, failResponse, createOrderId} = require('../utils')
 
 const router = new Router({
-  prefix: '/api/user'
+  prefix: '/user'
 })
 
 // 用户登录
 router.post('/login', async ctx => {
   try {
     const userData = ctx.request.body
-    const user = await User.findOne(userData)
+    const user = await User.findOne(userData).populate('cartList.goods')
     ctx.cookies.set('userId', user.userId, {
       path: '/',
       maxAge: 86400000
     })
-    ctx.cookies.set('userName', user.userName, {
+    ctx.cookies.set('username', user.username, {
       path: '/',
       maxAge: 86400000
     })
     ctx.body = successResponse({
-      userName: user.userName
+      username: user.username
     })
   } catch (err) {
     ctx.status = 500
@@ -52,7 +54,7 @@ router.get('/checkLogin', async ctx => {
 router.get('/cart', async ctx => {
   try {
     const userId = ctx.cookies.get('userId')
-    const user = await User.findOne({userId})
+    const user = await User.findOne({userId}).populate('cartList.goods')
     ctx.body = successResponse(user.cartList)
   } catch (err) {
     ctx.status = 500
@@ -64,11 +66,13 @@ router.get('/cart', async ctx => {
 router.get('/cartCount', async ctx => {
   try {
     const userId = ctx.cookies.get('userId')
-    const user = await User.findOne({userId})
+    const user = await User.findOne({userId}).populate('cartList.goods')
     let count = 0
     if (user.cartList.length) {
       user.cartList.forEach(item => {
-        count += item.productNum
+        if (item.isChecked) {
+          count += item.goodsNum
+        }
       })
     }
     ctx.body = successResponse(count)
@@ -83,43 +87,34 @@ router.post('/cart/del', async ctx => {
   try {
     const userId = ctx.cookies.get('userId')
     const productId = ctx.request.body.productId
-    await User.update(
-      {userId},
-      {
-        $pull: {
-          cartList: {productId}
-        }
-      }
-    )
-    ctx.body = successResponse('')
+    const user = await User.findOne({userId}).populate('cartList.goods')
+    const idx = user.cartList.findIndex(item => item.goods.productId === productId)
+    user.cartList.splice(idx, 1)
+    await user.save()
+    ctx.body = successResponse(user.cartList)
   } catch (err) {
     ctx.status = 500
     ctx.body = failResponse(err.message)
   }
 })
 
-// 编辑购物车物品数量
+// 编辑购物车物品数量和选中
 router.post('/cart/edit', async ctx => {
   try {
     const userId = ctx.cookies.get('userId')
     const productId = ctx.request.body.productId
-    const productNum = ctx.request.body.productNum
+    const goodsNum = ctx.request.body.goodsNum
     const isChecked = ctx.request.body.isChecked
-
-    await User.update(
-      {userId, 'cartList.productId': productId},
-      // {
-      //   'cartList.$.productNum': productNum,
-      //   'cartList.$.isChecked': isChecked
-      // }
-      {
-        $set: {
-          productNum: productNum,
-          isChecked: isChecked
-        }
-      }
-    )
-    ctx.body = successResponse('')
+    const user = await User.findOne({userId}).populate('cartList.goods')
+    const idx = user.cartList.findIndex(item => item.goods.productId === productId)
+    if (goodsNum) {
+      user.cartList[idx].goodsNum = goodsNum
+    }
+    if (isChecked !== undefined) {
+      user.cartList[idx].isChecked = isChecked
+    }
+    await user.save()
+    ctx.body = successResponse(user.cartList)
   } catch (err) {
     ctx.status = 500
     ctx.body = failResponse(err.message)
@@ -131,13 +126,13 @@ router.post('/cart/checkedAll', async ctx => {
   try {
     const userId = ctx.cookies.get('userId')
     const isCheckedAll = ctx.request.body.isCheckedAll
-    const user = await User.findOne({userId})
+    const user = await User.findOne({userId}).populate('cartList.goods')
     if (user.cartList.length) {
       user.cartList.forEach(item => {
         item.isChecked = isCheckedAll
       })
       await user.save()
-      ctx.body = successResponse('')
+      ctx.body = successResponse(user.cartList)
     }
   } catch (err) {
     ctx.status = 500
@@ -162,15 +157,33 @@ router.post('/address/del', async ctx => {
   try {
     const userId = ctx.cookies.get('userId')
     const addressId = ctx.request.body.addressId
-    await User.update(
-      {userId},
-      {
-        $pull: {
-          addressList: {_id: addressId}
-        }
-      }
-    )
-    ctx.body = successResponse('')
+    console.log(addressId)
+    const user = await User.findOne({userId})
+    const idx = user.addressList.findIndex(item => {
+      return item._id.toString() === addressId
+    })
+    console.log(idx)
+    user.addressList.splice(idx, 1)
+    await user.save()
+    ctx.body = successResponse(user.addressList)
+  } catch (err) {
+    ctx.status = 500
+    ctx.body = failResponse(err.message)
+  }
+})
+
+// 修改地址
+router.post('/address/edit', async ctx => {
+  try {
+    const userId = ctx.cookies.get('userId')
+    const newData = ctx.request.body.newData
+    const {_id} = newData
+    newData.meta.updateAt = Date.now()
+    const user = await User.findOne({userId})
+    const idx = user.addressList.findIndex(item => item._id.toString() === _id)
+    user.addressList.splice(idx, 1, newData)
+    await user.save()
+    ctx.body = successResponse(user.addressList)
   } catch (err) {
     ctx.status = 500
     ctx.body = failResponse(err.message)
@@ -183,12 +196,9 @@ router.post('/address/add', async ctx => {
     const userId = ctx.cookies.get('userId')
     const newAddress = ctx.request.body.newAddress
     const user = await User.findOne({userId})
-    user.addressList.push({
-      ...newAddress,
-      isDefault: false
-    })
+    user.addressList.push(newAddress)
     await user.save()
-    ctx.body = successResponse('')
+    ctx.body = successResponse(user.addressList)
   } catch (err) {
     ctx.status = 500
     ctx.body = failResponse(err.message)
@@ -200,7 +210,7 @@ router.post('/address/setDefault', async ctx => {
   try {
     const userId = ctx.cookies.get('userId')
     const addressId = ctx.request.body.addressId
-    const user = User.findOne({userId})
+    const user = await User.findOne({userId})
     user.addressList.forEach(item => {
       if (item._id.toString() === addressId) {
         item.isDefault = true
@@ -209,41 +219,28 @@ router.post('/address/setDefault', async ctx => {
       }
     })
     await user.save()
-    ctx.body = successResponse('')
+    ctx.body = successResponse(user.addressList)
   } catch (err) {
     ctx.status = 500
     ctx.body = failResponse(err.message)
   }
 })
 
-// 生成订单
-router.post('/payment', async ctx => {
+// 选中地址
+router.post('/address/checked', async ctx => {
   try {
     const userId = ctx.cookies.get('userId')
     const addressId = ctx.request.body.addressId
-    const orderTotalPrice = ctx.request.body.orderTotalPrice
     const user = await User.findOne({userId})
-    let address = ''
     user.addressList.forEach(item => {
       if (item._id.toString() === addressId) {
-        address = item
+        item.isChecked = true
+      } else {
+        item.isChecked = false
       }
     })
-    const goodsList = user.cartList.filter(item => item.isChecked === true)
-    const orderId = createOrderId()
-    const order = {
-      orderId,
-      orderTotalPrice,
-      addressInfo: address,
-      orderStatus: 1,
-      goodsList
-    }
-    user.orderList.push(order)
     await user.save()
-    ctx.body = successResponse({
-      orderId,
-      orderTotalPrice
-    })
+    ctx.body = successResponse(user.addressList)
   } catch (err) {
     ctx.status = 500
     ctx.body = failResponse(err.message)
@@ -252,6 +249,49 @@ router.post('/payment', async ctx => {
 
 // 获取订单详情
 router.get('/orderDetail', async ctx => {
+  try {
+    const userId = ctx.cookies.get('userId')
+    const user = await User.findOne({userId}).populate('cartList.goods')
+    const goodsList = user.cartList.filter(item => item.isChecked === true)
+    let orderTotalPrice = 0
+    user.cartList.forEach(item => {
+      if (item.isChecked) {
+        orderTotalPrice += item.goods.salePrice * item.goodsNum
+      }
+    })
+    let address = ''
+    user.addressList.forEach(item => {
+      if (item.isChecked === true) {
+        address = item
+      }
+    })
+    let ship = ''
+    const shipList = await Ship.find()
+    shipList.forEach(item => {
+      if (item.isChecked) {
+        ship = item
+      }
+    })
+    const orderId = createOrderId()
+    const order = {
+      orderId,
+      orderTotalPrice,
+      addressInfo: address,
+      shipInfo: ship,
+      orderStatus: 1,
+      goodsList
+    }
+    user.orderList.push(order)
+    await user.save()
+    ctx.body = successResponse(order)
+  } catch (err) {
+    ctx.status = 500
+    ctx.body = failResponse(err.message)
+  }
+})
+
+// 获取订单详情1111
+router.get('/1111orderDetail', async ctx => {
   try {
     const userId = ctx.cookies.get('userId')
     const orderId = ctx.query.orderId
