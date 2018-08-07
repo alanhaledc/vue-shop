@@ -2,11 +2,15 @@ import axios from 'axios'
 import {createError} from '../utils'
 
 const userRequest = axios.create({
-  baseURL: '/api/user'
+  baseURL: '/user'
 })
 
 const goodsRequest = axios.create({
-  baseURL: '/api/goods'
+  baseURL: '/goods'
+})
+
+const shipRequest = axios.create({
+  baseURL: '/ship'
 })
 
 const handleRequest = (request) => {
@@ -49,7 +53,7 @@ export default {
     }))
   },
   addCart(productId) {
-    return handleRequest(goodsRequest.post('/card/add', {productId}))
+    return handleRequest(goodsRequest.post('/cart/add', {productId}))
   },
   login(username, password) {
     return handleRequest(userRequest.post('/login', {username, password}))
@@ -63,17 +67,14 @@ export default {
   getUserCart() {
     return handleRequest(userRequest.get('/cart'))
   },
-  getUserCartCount() {
-    return handleRequest(userRequest.get('/cartCount'))
-  },
   deleteCart(productId) {
-    return handleRequest(userRequest.post('/card/del', {productId}))
+    return handleRequest(userRequest.post('/cart/del', {productId}))
   },
-  editCart(productId, productNum, isChecked) {
-    return handleRequest(userRequest.post('/card/edit', {productId, productNum, isChecked}))
+  editCart(productId, goodsNum, isChecked) {
+    return handleRequest(userRequest.post('/cart/edit', {productId, goodsNum, isChecked}))
   },
   checkedAll(isCheckedAll) {
-    return handleRequest(userRequest.post('/card/checkedAll', {isCheckedAll}))
+    return handleRequest(userRequest.post('/cart/checkedAll', {isCheckedAll}))
   },
   getAddress() {
     return handleRequest(userRequest.get('/address'))
@@ -81,16 +82,25 @@ export default {
   deleteAddress(addressId) {
     return handleRequest(userRequest.post('/address/del', {addressId}))
   },
-  AddAddress(newAddress) {
+  addAddress(newAddress) {
     return handleRequest(userRequest.post('/address/add', {newAddress}))
+  },
+  editAddress(newData) {
+    return handleRequest(userRequest.post('/address/edit', {newData}))
   },
   setDefaultAddress(addressId) {
     return handleRequest(userRequest.post('/address/setDefault', {addressId}))
   },
-  createPayment(addressId, orderTotalPrice) {
-    return handleRequest(userRequest.post('/payment', {addressId, orderTotalPrice}))
+  checkedAddress(addressId) {
+    return handleRequest(userRequest.post('/address/checked', {addressId}))
   },
-  getOrderDetail(orderId) {
-    return handleRequest(userRequest.get('/orderDetail', {params: {orderId}}))
+  getOrderDetail() {
+    return handleRequest(userRequest.get('/orderDetail'))
+  },
+  getShipList() {
+    return handleRequest(shipRequest.get('/list'))
+  },
+  checkedShip(shipId) {
+    return handleRequest(shipRequest.post('/checked', {shipId}))
   }
 }
