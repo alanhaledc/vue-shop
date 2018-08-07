@@ -3,6 +3,7 @@ import Vuex from 'vuex'
 
 import goods from './modules/goods'
 import user from './modules/user'
+import ship from './modules/ship'
 
 Vue.use(Vuex)
 
@@ -15,7 +16,8 @@ export default function (/* { ssrContext } */) {
   const Store = new Vuex.Store({
     modules: {
       goods,
-      user
+      user,
+      ship
     }
   })
 
