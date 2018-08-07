@@ -6410,6 +6410,10 @@ vue-infinite-scroll@^2.0.2:
   version "2.0.2"
   resolved "http://registry.npm.taobao.org/vue-infinite-scroll/download/vue-infinite-scroll-2.0.2.tgz#ca37a91fe92ee0ad3b74acf8682c00917144b711"
 
+vue-lazyload@^1.2.6:
+  version "1.2.6"
+  resolved "http://registry.npm.taobao.org/vue-lazyload/download/vue-lazyload-1.2.6.tgz#baa04c172d52a812608eb12c7a6bfb14f5c91079"
+
 vue-loader@15.2.6:
   version "15.2.6"
   resolved "http://registry.npm.taobao.org/vue-loader/download/vue-loader-15.2.6.tgz#4ad4e56a0ca1fd89ebc4220f9e3bd4723097b397"
@@ -6458,6 +6462,10 @@ vue-template-es2015-compiler@^1.6.0:
 vue@2.5.16:
   version "2.5.16"
   resolved "http://registry.npm.taobao.org/vue/download/vue-2.5.16.tgz#07edb75e8412aaeed871ebafa99f4672584a0085"
+
+vuelidate@^0.7.4:
+  version "0.7.4"
+  resolved "http://registry.npm.taobao.org/vuelidate/download/vuelidate-0.7.4.tgz#5a0e54be09ac0192f1aa3387d74b92e0945bf8aa"
 
 vuex@3.0.1:
   version "3.0.1"

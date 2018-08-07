@@ -3,13 +3,8 @@
 module.exports = function (ctx) {
   return {
     // app plugins (/src/plugins)
-    plugins: [
-      'axios',
-      'VueInfiniteScroll'
-    ],
-    css: [
-      'app.styl'
-    ],
+    plugins: ['axios', 'VueLazyLoad', 'Vuelidate'],
+    css: ['app.styl'],
     extras: [
       ctx.theme.mat ? 'roboto-font' : null,
       'material-icons' // optional, you are not bound to it
@@ -25,7 +20,7 @@ module.exports = function (ctx) {
       // gzip: true,
       // analyze: true,
       // extractCSS: false,
-      extendWebpack (cfg) {
+      extendWebpack(cfg) {
         cfg.module.rules.push({
           enforce: 'pre',
           test: /\.(js|vue)$/,
@@ -39,8 +34,15 @@ module.exports = function (ctx) {
       // port: 8080,
       open: false, // opens browser window automatically
       proxy: {
-        '/api/goods/*': 'http://127.0.0.1:9096',
-        '/api/user/*': 'http://127.0.0.1:9096'
+        '/goods/*': {
+          target: 'http://127.0.0.1:9096'
+        },
+        '/user/*': {
+          target: 'http://127.0.0.1:9096'
+        },
+        '/ship/*': {
+          target: 'http://127.0.0.1:9096'
+        }
       }
     },
     // framework: 'all' --- includes everything; for dev only!
@@ -63,22 +65,32 @@ module.exports = function (ctx) {
         'QItemMain',
         'QItemSeparator',
         'QItemSide',
+        'QItemTile',
         'QBreadcrumbs',
         'QBreadcrumbsEl',
         'QCard',
         'QCardMedia',
         'QCardTitle',
-        'QCardActions'
+        'QCardMain',
+        'QCardActions',
+        'QModal',
+        'QField',
+        'QInput',
+        'QTabs',
+        'QTab',
+        'QTabPane',
+        'QTable',
+        'QTr',
+        'QTd',
+        'QToggle',
+        'QChip',
+        'QStepper',
+        'QStep',
+        'QStepperNavigation'
       ],
-      directives: [
-        'Ripple',
-        'CloseOverlay'
-      ],
+      directives: ['Ripple', 'CloseOverlay'],
       // Quasar plugins
-      plugins: [
-        'Notify',
-        'Loading'
-      ]
+      plugins: ['Notify', 'Loading', 'Dialog']
       // iconSet: ctx.theme.mat ? 'material-icons' : 'ionicons'
       // i18n: 'de' // Quasar language
     },
@@ -100,29 +112,29 @@ module.exports = function (ctx) {
         theme_color: '#027be3',
         icons: [
           {
-            'src': 'statics/icons/icon-128x128.png',
-            'sizes': '128x128',
-            'type': 'image/png'
+            src: 'statics/icons/icon-128x128.png',
+            sizes: '128x128',
+            type: 'image/png'
           },
           {
-            'src': 'statics/icons/icon-192x192.png',
-            'sizes': '192x192',
-            'type': 'image/png'
+            src: 'statics/icons/icon-192x192.png',
+            sizes: '192x192',
+            type: 'image/png'
           },
           {
-            'src': 'statics/icons/icon-256x256.png',
-            'sizes': '256x256',
-            'type': 'image/png'
+            src: 'statics/icons/icon-256x256.png',
+            sizes: '256x256',
+            type: 'image/png'
           },
           {
-            'src': 'statics/icons/icon-384x384.png',
-            'sizes': '384x384',
-            'type': 'image/png'
+            src: 'statics/icons/icon-384x384.png',
+            sizes: '384x384',
+            type: 'image/png'
           },
           {
-            'src': 'statics/icons/icon-512x512.png',
-            'sizes': '512x512',
-            'type': 'image/png'
+            src: 'statics/icons/icon-512x512.png',
+            sizes: '512x512',
+            type: 'image/png'
           }
         ]
       }
@@ -132,24 +144,21 @@ module.exports = function (ctx) {
     },
     electron: {
       // bundler: 'builder', // or 'packager'
-      extendWebpack (cfg) {
+      extendWebpack(cfg) {
         // do something with Electron process Webpack cfg
       },
       packager: {
         // https://github.com/electron-userland/electron-packager/blob/master/docs/api.md#options
-
         // OS X / Mac App Store
         // appBundleId: '',
         // appCategoryType: '',
         // osxSign: '',
         // protocol: 'myapp://path',
-
         // Window only
         // win32metadata: { ... }
       },
       builder: {
         // https://www.electron.build/configuration/configuration
-
         // appId: 'quasar-app'
       }
     }
