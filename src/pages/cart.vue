@@ -15,7 +15,7 @@
             round
             dense
             :class="{'check': props.row.isChecked}"
-            @click.native="toggleChecked(props.row.id,props.row.isChecked)"
+            @click.native="toggleChecked(props.row.id, props.row.isChecked)"
           ></q-btn>
         </q-item-side>
       </q-td>
@@ -29,16 +29,19 @@
         <div class="q-subheading">￥{{props.row.price}}</div>
       </q-td>
       <q-td slot="body-cell-quantity" slot-scope="props" :props="props">
-        <q-item class="absolute-center">
+        <q-item class="justify-center">
           <q-btn icon="remove" round dense color="teal"
                  @click.native="decreaseNum(props.row.id, props.row.quantity)"></q-btn>
-          <div class="q-ml-sm q-mr-sm">{{props.row.quantity}}</div>
+          <div class="q-ml-sm q-mr-sm">{{props.row.quantity}}
+          </div>
           <q-btn icon="add" round dense color="primary"
-                 @click.native="addNum(props.row.id, props.row.quantity)"></q-btn>
+                 @click.native="addNum(props.row.id, props.row.quantity, props.row.isChecked)"></q-btn>
         </q-item>
       </q-td>
       <q-td slot="body-cell-totalPrice" slot-scope="props" :props="props">
-        <div class="q-subheading">￥{{props.row.price * props.row.quantity}}</div>
+        <div class="q-subheading absolute-center" style="width: 120px">
+          ￥{{props.row.price * props.row.quantity}}
+        </div>
       </q-td>
       <q-td slot="body-cell-delete" slot-scope="props" :props="props">
         <q-btn icon="delete" round dense color="negative" @click.native="deleteItem(props.row.id)"></q-btn>
@@ -59,10 +62,18 @@
             <q-item-main/>
             <q-item-side>
               <q-btn-group>
-                <q-chip color="primary" size="md" square style="border-radius: 0" class="q-subheading">
-                  合计:{{amountQuantity}}件商品,￥{{amountPrice}}
+                <q-chip color="secondary" size="md" square style="border-radius: 0" class="q-subheading">
+                  <q-item>
+                    <q-item-side class="text-white" style="border-right: 1px solid teal">
+                      <q-item-tile>合计</q-item-tile>
+                    </q-item-side>
+                    <q-item-main>
+                      <q-item-tile>{{cartCount}}件商品</q-item-tile>
+                      <q-item-tile>{{amountPrice}}元</q-item-tile>
+                    </q-item-main>
+                  </q-item>
                 </q-chip>
-                <q-btn color="positive" size="md" @click.native="goAddress">去结算</q-btn>
+                <q-btn color="primary" size="lg" @click.native="goAddress">去结算</q-btn>
               </q-btn-group>
             </q-item-side>
           </q-item>
@@ -88,11 +99,13 @@
           {name: 'delete', field: 'delete', label: '操作', align: 'center'}
         ],
         isCheckedAll: true,
-        isChecked: false
+        isChecked: false,
+        quantityArr: this.quantityList
       }
     },
     created() {
       this.getCart()
+      this.getCartCount()
     },
     computed: {
       amountPrice() {
@@ -104,25 +117,25 @@
         })
         return total
       },
-      amountQuantity() {
-        let quantity = 0
-        this.cart.forEach(item => {
-          if (item.isChecked) {
-            quantity += item.quantity
-          }
-        })
-        return quantity
-      },
-      ...mapGetters('user', ['cart'])
+      ...mapGetters('user', ['cart', 'cartCount'])
     },
     methods: {
-      addNum(id, quantity) {
+      addNum(id, quantity, isChecked) {
         const productId = id
         let goodsNum = quantity += 1
-        this.editCart({
-          productId,
-          goodsNum
-        })
+        // 增加未选中产品的数量时设置为再次选中
+        if (isChecked === false) {
+          this.editCart({
+            productId,
+            goodsNum,
+            isChecked: true
+          })
+        } else {
+          this.editCart({
+            productId,
+            goodsNum
+          })
+        }
       },
       decreaseNum(id, quantity) {
         const productId = id
@@ -137,12 +150,7 @@
       },
       toggleChecked(id, flag) {
         const productId = id
-        let isChecked
-        if (flag) {
-          isChecked = false
-        } else {
-          isChecked = true
-        }
+        const isChecked = !flag
         this.editCart({
           productId,
           isChecked
@@ -157,9 +165,7 @@
       },
       toggleCheckedAll() {
         this.isCheckedAll = !this.isCheckedAll
-        this.checkedAll({
-          isCheckedAll: this.isCheckedAll
-        })
+        this.checkedAll(this.isCheckedAll)
       },
       goAddress() {
         if (this.amountPrice) {
@@ -176,24 +182,28 @@
           color: 'negative'
         })
           .then(() => {
-            this.deleteCart({
-              productId: id
-            })
+            this.deleteCart(id)
             this.$q.notify({
-              message: '你删除了一款商品',
-              color: 'negative',
-              icon: 'done'
+              message: '删除成功',
+              icon: 'warning',
+              position: 'top'
             })
           })
           .catch(() => {
             this.$q.notify({
               message: '已取消',
               color: 'positive',
-              icon: 'done'
+              icon: 'done',
+              position: 'top'
             })
           })
       },
-      ...mapActions('user', ['getCart', 'deleteCart', 'editCart', 'checkedAll'])
+      ...mapActions('user', ['getCart', 'getCartCount', 'deleteCart', 'editCart', 'checkedAll'])
+    },
+    watch: {
+      'cart'() {
+        this.getCartCount()
+      }
     }
   }
 </script>

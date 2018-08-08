@@ -68,7 +68,6 @@
     },
     created() {
       this._getGoodsList(false)
-      console.log(1111)
       // 监听window滚动
       window.addEventListener('scroll', this.loadMore)
     },
@@ -125,7 +124,7 @@
         }
       },
       _addCart(productId) {
-        return this.addCart(productId)
+        this.addCart(productId)
           .then(data => {
             if (data.status === 0) {
               this.$q.dialog({
@@ -138,6 +137,9 @@
                 .then(() => {
                   this.$router.push('/home/cart')
                 })
+                .catch(() => {
+                })
+              this.getCartCount()
             } else {
               this.$q.dialog({
                 title: '警告',
@@ -148,7 +150,8 @@
             }
           })
       },
-      ...mapActions('goods', ['getGoodsList', 'addCart'])
+      ...mapActions('goods', ['getGoodsList', 'addCart']),
+      ...mapActions('user', ['getCartCount'])
     },
     watch: {
       /**
