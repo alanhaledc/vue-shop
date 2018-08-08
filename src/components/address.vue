@@ -9,8 +9,7 @@
         <q-btn-group>
           <q-btn
             :icon="isShowAllAddress ? 'expand_less': 'expand_more'"
-            @click.native="isShowAllAddress = !isShowAllAddress"
-            :disable="addressList.length < 5"
+            @click.native="toggleMore"
           >
             {{isShowAllAddress ? '收起': '更多'}}
           </q-btn>
@@ -172,6 +171,12 @@
       ...mapGetters('user', ['addressList'])
     },
     methods: {
+      toggleMore() {
+        if (this.addressList.length < 5) {
+          return
+        }
+        this.isShowAllAddress = !this.isShowAllAddress
+      },
       saveNewAddress() {
         this.addAddress(this.newAddress)
         this.isOpenAdd = false
