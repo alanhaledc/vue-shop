@@ -88,9 +88,9 @@ const userSchema = new Schema({
   }
 })
 
-// userSchema.pre('find', function (next) {
-//   this.populate('cartList', 'goods')
-//   next()
-// })
+userSchema.pre('findOne', function (next) {
+  this.populate('cartList.goods')
+  next()
+})
 
 module.exports = mongoose.model('User', userSchema)
