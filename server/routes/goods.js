@@ -69,10 +69,10 @@ router.get('/list', async ctx => {
 // 加入购物车
 router.post('/cart/add', async ctx => {
   try {
-    const userId = '100000077'
+    const _id = ctx.cookies.get('userId')
     const productId = ctx.request.body.productId
 
-    const user = await User.findOne({userId}).populate('cartList.goods')
+    const user = await User.findOne({_id})
     let goods = ''
     // 查看购物车中是否有这个产品
     user.cartList.forEach(item => {
