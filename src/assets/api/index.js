@@ -58,6 +58,9 @@ export default {
   login(username, password) {
     return handleRequest(userRequest.post('/login', {username, password}))
   },
+  register(username, password) {
+    return handleRequest(userRequest.post('/register', {username, password}))
+  },
   logout() {
     return handleRequest(userRequest.post('/logout'))
   },
@@ -66,6 +69,9 @@ export default {
   },
   getUserCart() {
     return handleRequest(userRequest.get('/cart'))
+  },
+  getUserCartCount() {
+    return handleRequest(userRequest.get('/cartCount'))
   },
   deleteCart(productId) {
     return handleRequest(userRequest.post('/cart/del', {productId}))
