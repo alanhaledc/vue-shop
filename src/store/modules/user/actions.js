@@ -1,7 +1,7 @@
 import api from '../../../assets/api'
 
 const normalizeCart = data => {
-  let arr = []
+  let cartList = []
   data.forEach(item => {
     const goods = {
       id: item.goods.productId,
@@ -11,9 +11,9 @@ const normalizeCart = data => {
       quantity: item.goodsNum,
       isChecked: item.isChecked
     }
-    arr.push(goods)
+    cartList.push(goods)
   })
-  return arr
+  return cartList
 }
 
 export const login = ({commit}, {username, password}) => {
@@ -25,11 +25,41 @@ export const login = ({commit}, {username, password}) => {
       return data
     })
 }
+
+export const register = ({commit}, {username, password}) => {
+  return api.register(username, password)
+    .then(data => {
+      if (data.status === 0) {
+        commit('setUserInfo', data.result)
+      }
+      return data
+    })
+}
+
+export const logout = ({commit}) => {
+  return api.logout()
+    .then(data => {
+      if (data.status === 0) {
+        commit('setUserInfo', {})
+      }
+      return data
+    })
+}
+
 export const getCart = ({commit}) => {
   api.getUserCart()
     .then(data => {
       if (data.status === 0) {
         commit('setCart', normalizeCart(data.result))
+      }
+    })
+}
+
+export const getCartCount = ({commit}) => {
+  api.getUserCartCount()
+    .then(data => {
+      if (data.status === 0) {
+        commit('setCartCount', data.result)
       }
     })
 }

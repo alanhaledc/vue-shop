@@ -1,6 +1,9 @@
+import {LocalStorage} from 'quasar'
+
 const state = {
-  userInfo: {},
+  userInfo: LocalStorage.get.item('userInfo') || {},
   cart: [],
+  cartCount: 0,
   addressList: [],
   orderDetail: {}
 }
