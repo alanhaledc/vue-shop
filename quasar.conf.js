@@ -90,7 +90,7 @@ module.exports = function (ctx) {
       ],
       directives: ['Ripple', 'CloseOverlay'],
       // Quasar plugins
-      plugins: ['Notify', 'Loading', 'Dialog']
+      plugins: ['Notify', 'Loading', 'Dialog', 'Cookies', 'LocalStorage']
       // iconSet: ctx.theme.mat ? 'material-icons' : 'ionicons'
       // i18n: 'de' // Quasar language
     },
