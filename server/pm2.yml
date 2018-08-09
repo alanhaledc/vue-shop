@@ -1,0 +1,7 @@
+apps:
+  - script: ./app.js
+    name: shop
+    env_production:
+      NODE_ENV: production
+      HOST: localhost
+      PORT: 9096
