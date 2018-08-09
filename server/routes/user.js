@@ -79,15 +79,6 @@ router.post('/logout', async ctx => {
   ctx.body = successResponse('注销成功')
 })
 
-// 检查用户是否登录
-router.get('/checkLogin', async ctx => {
-  if (ctx.cookies.get('userId')) {
-    ctx.body = successResponse(ctx.cookies.get('userName'))
-  } else {
-    ctx.body = failResponse('当前未登录')
-  }
-})
-
 // 获取用户购物车数据
 router.get('/cart', async ctx => {
   try {

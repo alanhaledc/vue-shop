@@ -64,9 +64,6 @@ export default {
   logout() {
     return handleRequest(userRequest.post('/logout'))
   },
-  checkLogin() {
-    return handleRequest(userRequest.get('/checkLogin'))
-  },
   getUserCart() {
     return handleRequest(userRequest.get('/cart'))
   },
