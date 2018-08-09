@@ -311,6 +311,7 @@ router.get('/orderDetail', async ctx => {
       goodsList
     }
     user.orderList.push(order)
+    user.cartList = []
     await user.save()
     ctx.body = successResponse(order)
   } catch (err) {
