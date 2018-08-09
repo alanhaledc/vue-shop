@@ -59,7 +59,11 @@
               ></q-btn>
               <span class="q-ml-sm">全选</span>
             </q-item-side>
-            <q-item-main/>
+            <q-item-main class="text-center">
+              <q-btn rounded v-show="cart.length === 0" color="pink" @click="$router.push('/home/goods')">
+                购物车空空如也！去商城购物吧! GO!!!
+              </q-btn>
+            </q-item-main>
             <q-item-side>
               <q-btn-group>
                 <q-chip color="secondary" size="md" square style="border-radius: 0" class="q-subheading">
