@@ -13,7 +13,6 @@
       <q-step title="查看订单">
         <OrderDetail/>
         <q-stepper-navigation>
-          <q-btn @click.native="$refs.stepper.previous()">上一步</q-btn>
           <q-btn @click.native="$refs.stepper.next()">下一步</q-btn>
         </q-stepper-navigation>
       </q-step>
@@ -26,7 +25,6 @@
           </q-card>
         </q-item>
         <q-stepper-navigation>
-          <q-btn @click.native="$refs.stepper.previous()">上一步</q-btn>
           <q-btn @click.native="$refs.stepper.next()">下一步</q-btn>
         </q-stepper-navigation>
       </q-step>

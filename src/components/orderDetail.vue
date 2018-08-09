@@ -75,12 +75,13 @@
     },
     created() {
       this.getOrderDetail()
+      this.getCartCount()
     },
     computed: {
       ...mapGetters('user', ['orderDetail'])
     },
     methods: {
-      ...mapActions('user', ['getOrderDetail'])
+      ...mapActions('user', ['getOrderDetail', 'getCartCount'])
     }
   }
 </script>
