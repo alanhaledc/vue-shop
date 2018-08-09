@@ -114,8 +114,8 @@
         const scrollHeight = document.documentElement.scrollHeight
         const scrollTop = document.documentElement.scrollTop
         const screenHeight = window.innerHeight
-        // 刚好滚动到底部时，才请求数据（即下拉刷新）
-        if (scrollTop === scrollHeight - screenHeight) {
+        // 刚好滚动到底部相应位置时，才请求数据（即下拉刷新）
+        if (scrollTop > scrollHeight - screenHeight - 10) {
           setTimeout(() => {
             this.page++
             this._getGoodsList(true)
