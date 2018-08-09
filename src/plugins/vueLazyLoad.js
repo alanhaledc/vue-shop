@@ -1,7 +1,7 @@
-import VueLazyLoad from 'vue-lazyload'
+import vueLazyLoad from 'vue-lazyload'
 
 export default ({Vue}) => {
-  Vue.use(VueLazyLoad, {
+  Vue.use(vueLazyLoad, {
     loading: require('../statics/images/loading-bars.svg')
   })
 }

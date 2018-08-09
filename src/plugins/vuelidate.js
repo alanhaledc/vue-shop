@@ -1,5 +1,5 @@
-import Vuelidate from 'vuelidate'
+import vuelidate from 'vuelidate'
 
 export default ({Vue}) => {
-  Vue.use(Vuelidate)
+  Vue.use(vuelidate)
 }
