@@ -88,128 +88,124 @@
 </template>
 
 <script>
-  import {mapActions, mapGetters} from 'vuex'
+import { mapActions, mapGetters } from 'vuex'
 
-  export default {
-    name: 'Cart',
-    data() {
-      return {
-        columns: [
-          {name: 'select', field: 'select', label: '选中', align: 'center'},
-          {name: 'name', field: 'name', label: '商品', align: 'center'},
-          {name: 'price', field: 'price', label: '单价', align: 'center'},
-          {name: 'quantity', field: 'quantity', label: '数量', align: 'center'},
-          {name: 'totalPrice', field: 'totalPrice', label: '总价', align: 'center'},
-          {name: 'delete', field: 'delete', label: '操作', align: 'center'}
-        ],
-        isCheckedAll: true,
-        isChecked: false,
-        quantityArr: this.quantityList
-      }
+export default {
+  name: 'Cart',
+  data() {
+    return {
+      columns: [
+        { name: 'select', field: 'select', label: '选中', align: 'center' },
+        { name: 'name', field: 'name', label: '商品', align: 'center' },
+        { name: 'price', field: 'price', label: '单价', align: 'center' },
+        { name: 'quantity', field: 'quantity', label: '数量', align: 'center' },
+        { name: 'totalPrice', field: 'totalPrice', label: '总价', align: 'center' },
+        { name: 'delete', field: 'delete', label: '操作', align: 'center' }
+      ],
+      isCheckedAll: true,
+      isChecked: false,
+      quantityArr: this.quantityList
+    }
+  },
+  created() {
+    this.getCart()
+    this.getCartCount()
+  },
+  computed: {
+    amountPrice() {
+      let total = 0
+      this.cart.forEach(item => {
+        if (item.isChecked) {
+          total += item.price * item.quantity
+        }
+      })
+      return total
     },
-    created() {
-      this.getCart()
-      this.getCartCount()
-    },
-    computed: {
-      amountPrice() {
-        let total = 0
-        this.cart.forEach(item => {
-          if (item.isChecked) {
-            total += item.price * item.quantity
-          }
+    ...mapGetters('user', ['cart', 'cartCount'])
+  },
+  methods: {
+    addNum(id, quantity, isChecked) {
+      const productId = id
+      let goodsNum = quantity += 1
+      // 增加未选中产品的数量时设置为再次选中
+      if (isChecked === false) {
+        this.editCart({
+          productId,
+          goodsNum,
+          isChecked: true
         })
-        return total
-      },
-      ...mapGetters('user', ['cart', 'cartCount'])
-    },
-    methods: {
-      addNum(id, quantity, isChecked) {
-        const productId = id
-        let goodsNum = quantity += 1
-        // 增加未选中产品的数量时设置为再次选中
-        if (isChecked === false) {
-          this.editCart({
-            productId,
-            goodsNum,
-            isChecked: true
-          })
-        } else {
-          this.editCart({
-            productId,
-            goodsNum
-          })
-        }
-      },
-      decreaseNum(id, quantity) {
-        const productId = id
-        let goodsNum = quantity -= 1
-        if (goodsNum < 1) {
-          goodsNum = 1
-        }
+      } else {
         this.editCart({
           productId,
           goodsNum
         })
-      },
-      toggleChecked(id, flag) {
-        const productId = id
-        const isChecked = !flag
-        this.editCart({
-          productId,
-          isChecked
-        })
-        setTimeout(() => {
-          if (this.cart.length === this.cart.filter(item => item.isChecked === true).length) {
-            this.isCheckedAll = true
-          } else {
-            this.isCheckedAll = false
-          }
-        }, 200)
-      },
-      toggleCheckedAll() {
-        this.isCheckedAll = !this.isCheckedAll
-        this.checkedAll(this.isCheckedAll)
-      },
-      goAddress() {
-        if (this.amountPrice) {
-          this.$router.push('/home/trade')
-        }
-      },
-      deleteItem(id) {
-        console.log(id)
-        this.$q.dialog({
-          title: '警告',
-          message: '确定要删除吗？',
-          cancel: '取消',
-          ok: '确认',
-          color: 'negative'
-        })
-          .then(() => {
-            this.deleteCart(id)
-            this.$q.notify({
-              message: '删除成功',
-              icon: 'warning',
-              position: 'top'
-            })
-          })
-          .catch(() => {
-            this.$q.notify({
-              message: '已取消',
-              color: 'positive',
-              icon: 'done',
-              position: 'top'
-            })
-          })
-      },
-      ...mapActions('user', ['getCart', 'getCartCount', 'deleteCart', 'editCart', 'checkedAll'])
-    },
-    watch: {
-      'cart'() {
-        this.getCartCount()
       }
+    },
+    decreaseNum(id, quantity) {
+      const productId = id
+      let goodsNum = quantity -= 1
+      if (goodsNum < 1) {
+        goodsNum = 1
+      }
+      this.editCart({
+        productId,
+        goodsNum
+      })
+    },
+    toggleChecked(id, flag) {
+      const productId = id
+      const isChecked = !flag
+      this.editCart({
+        productId,
+        isChecked
+      })
+      setTimeout(() => {
+        this.isCheckedAll = this.cart.length === this.cart.filter(item => item.isChecked === true).length
+      }, 200)
+    },
+    toggleCheckedAll() {
+      this.isCheckedAll = !this.isCheckedAll
+      this.checkedAll(this.isCheckedAll)
+    },
+    goAddress() {
+      if (this.amountPrice) {
+        this.$router.push('/home/trade')
+      }
+    },
+    deleteItem(id) {
+      console.log(id)
+      this.$q.dialog({
+        title: '警告',
+        message: '确定要删除吗？',
+        cancel: '取消',
+        ok: '确认',
+        color: 'negative'
+      })
+        .then(() => {
+          this.deleteCart(id)
+          this.$q.notify({
+            message: '删除成功',
+            icon: 'warning',
+            position: 'top'
+          })
+        })
+        .catch(() => {
+          this.$q.notify({
+            message: '已取消',
+            color: 'positive',
+            icon: 'done',
+            position: 'top'
+          })
+        })
+    },
+    ...mapActions('user', ['getCart', 'getCartCount', 'deleteCart', 'editCart', 'checkedAll'])
+  },
+  watch: {
+    'cart'() {
+      this.getCartCount()
     }
   }
+}
 </script>
 
 <style lang="stylus" scoped>
