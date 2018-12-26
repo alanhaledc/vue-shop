@@ -59,28 +59,28 @@
 </template>
 
 <script>
-  import {mapGetters} from 'vuex'
+import { mapGetters } from 'vuex'
 
-  import Address from '../components/address'
-  import Ship from '../components/ship'
-  import OrderDetail from '../components/orderDetail'
+import Address from '../components/address'
+import Ship from '../components/ship'
+import OrderDetail from '../components/orderDetail'
 
-  export default {
-    name: 'Trade',
-    components: {
-      Address,
-      Ship,
-      OrderDetail
-    },
-    computed: {
-      ...mapGetters('user', ['orderDetail'])
-    },
-    methods: {
-      goGoods() {
-        this.$router.replace('/home/goods')
-      }
+export default {
+  name: 'Trade',
+  components: {
+    Address,
+    Ship,
+    OrderDetail
+  },
+  computed: {
+    ...mapGetters('user', ['orderDetail'])
+  },
+  methods: {
+    goGoods() {
+      this.$router.replace('/home/goods')
     }
   }
+}
 </script>
 
 <style>

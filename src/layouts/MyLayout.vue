@@ -137,153 +137,156 @@
 </template>
 
 <script>
-  import {mapGetters, mapActions, mapMutations} from 'vuex'
-  import {required, minLength} from 'vuelidate/lib/validators'
+import { mapGetters, mapActions, mapMutations } from 'vuex'
+import { required, minLength } from 'vuelidate/lib/validators'
 
-  export default {
-    name: 'MyLayout',
-    validations: {
+export default {
+  name: 'MyLayout',
+  validations: {
+    LoginForm: {
+      username: {
+        required,
+        minLength: minLength(4)
+      },
+      password: {
+        required,
+        minLength: minLength(6)
+      }
+    },
+    registerForm: {
+      username: {
+        required,
+        minLength: minLength(4)
+      },
+      password: {
+        required,
+        minLength: minLength(6)
+      }
+    }
+  },
+  data() {
+    return {
       LoginForm: {
-        username: {
-          required,
-          minLength: minLength(4)
-        },
-        password: {
-          required,
-          minLength: minLength(6)
-        }
+        username: 'user1',
+        password: '123456'
       },
       registerForm: {
-        username: {
-          required,
-          minLength: minLength(4)
-        },
-        password: {
-          required,
-          minLength: minLength(6)
-        }
+        username: '',
+        password: ''
+      },
+      opened: false,
+      selectTab: 'tab-1'
+    }
+  },
+  created() {
+    this.getCartCount()
+  },
+  computed: {
+    label() {
+      return this.$route.name.toUpperCase()
+    },
+    showLoginBtn() {
+      return this.userInfo.username === undefined
+    },
+    ...mapGetters('user', ['userInfo', 'cartCount'])
+  },
+  methods: {
+    showLoginModal(flag) {
+      if (flag) {
+        this.selectTab = 'tab-1'
+      } else {
+        this.selectTab = 'tab-2'
       }
+      this.opened = true
     },
-    data() {
-      return {
-        LoginForm: {
-          username: 'user1',
-          password: '123456'
-        },
-        registerForm: {
-          username: '',
-          password: ''
-        },
-        opened: false,
-        selectTab: 'tab-1'
+    _register() {
+      this.$v.registerForm.$touch()
+      if (this.$v.registerForm.$error) {
+        this.$q.notify({
+          message: '请检查输入的内容',
+          icon: 'warning',
+          position: 'top'
+        })
+        return
       }
-    },
-    created() {
-      this.getCartCount()
-    },
-    computed: {
-      label() {
-        return this.$route.name.toUpperCase()
-      },
-      showLoginBtn() {
-        return this.userInfo.username === undefined
-      },
-      ...mapGetters('user', ['userInfo', 'cartCount'])
-    },
-    methods: {
-      showLoginModal(flag) {
-        if (flag) {
-          this.selectTab = 'tab-1'
-        } else {
-          this.selectTab = 'tab-2'
-        }
-        this.opened = true
-      },
-      _register() {
-        this.$v.registerForm.$touch()
-        if (this.$v.registerForm.$error) {
-          this.$q.notify({
-            message: '请检查输入的内容',
-            icon: 'warning',
-            position: 'top'
-          })
-          return
-        }
-        this.register({
-          username: this.registerForm.username,
-          password: this.registerForm.password
-        })
-          .then(data => {
-            if (data.status === 0) {
-              this.$q.notify({
-                message: '注册成功',
-                color: 'positive',
-                icon: 'done',
-                position: 'top'
-              })
-              this.opened = false
-              this.setCartCount(0)
-            } else {
-              this.$q.notify({
-                message: data.message,
-                icon: 'warning',
-                position: 'top'
-              })
-            }
-          })
-      },
-      _login() {
-        this.$v.LoginForm.$touch()
-        if (this.$v.LoginForm.$error) {
-          this.$q.notify({
-            message: '请检查输入的内容',
-            icon: 'warning',
-            position: 'top'
-          })
-          return
-        }
-        this.login({
-          username: this.LoginForm.username,
-          password: this.LoginForm.password
-        })
-          .then(data => {
-            if (data.status === 0) {
-              this.$q.notify({
-                message: '登录成功',
-                color: 'positive',
-                icon: 'done',
-                position: 'top'
-              })
-              this.opened = false
-              this.getCartCount()
-            } else {
-              this.$q.notify({
-                message: data.message,
-                icon: 'warning',
-                position: 'top'
-              })
-            }
-          })
-      },
-      _logout() {
-        this.logout()
-          .then(() => {
-            this.$q.localStorage.clear()
+      const { username, password } = this.registerForm
+      this.register({
+        username,
+        password
+      })
+        .then(res => {
+          const { data } = res
+          if (data.success) {
             this.$q.notify({
-              message: '退出成功',
+              message: '注册成功',
               color: 'positive',
               icon: 'done',
               position: 'top'
             })
-            this.$router.push({
-              name: 'goods'
+            this.opened = false
+            this.setCartCount(0)
+          } else {
+            this.$q.notify({
+              message: data.message,
+              icon: 'warning',
+              position: 'top'
             })
+          }
+        })
+    },
+    _login() {
+      this.$v.LoginForm.$touch()
+      if (this.$v.LoginForm.$error) {
+        this.$q.notify({
+          message: '请检查输入的内容',
+          icon: 'warning',
+          position: 'top'
+        })
+        return
+      }
+
+      const { username, password } = this.LoginForm
+      this.login({
+        username,
+        password
+      })
+        .then(res => {
+          const { data } = res
+          if (data.success) {
+            this.$q.notify({
+              message: '登录成功',
+              color: 'positive',
+              icon: 'done',
+              position: 'top'
+            })
+            this.opened = false
+            this.getCartCount()
+          } else {
+            this.$q.notify({
+              message: data.msg,
+              icon: 'warning',
+              position: 'top'
+            })
+          }
+        })
+    },
+    _logout() {
+      this.logout()
+        .then(() => {
+          this.$q.localStorage.clear()
+          this.$q.notify({
+            message: '退出成功',
+            color: 'positive',
+            icon: 'done',
+            position: 'top'
           })
-      },
-      ...mapActions('user', ['login', 'register', 'logout', 'getCartCount']),
-      ...mapMutations('user', ['setCartCount'])
-    }
+          this.$router.push('/')
+        })
+    },
+    ...mapActions('user', ['login', 'register', 'logout', 'getCartCount']),
+    ...mapMutations('user', ['setCartCount'])
   }
+}
 </script>
 
 <style>
