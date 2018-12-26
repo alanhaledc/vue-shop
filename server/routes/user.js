@@ -1,10 +1,10 @@
 const Router = require('koa-router')
 
-const User = require('../db/models/user')
-require('../db/models/goods')
-const Ship = require('../db/models/ship')
+const User = require('../database/models/user')
+require('../database/models/goods')
+const Ship = require('../database/models/ship')
 
-const {successResponse, failResponse, createOrderId, md5Pwd} = require('../utils')
+const { successResponse, failureResponse, createOrderId, md5Pwd } = require('../utils')
 
 const router = new Router({
   prefix: '/user'
@@ -13,12 +13,12 @@ const router = new Router({
 // 用户登录
 router.post('/login', async ctx => {
   try {
-    const {username, password} = ctx.request.body
+    const { username, password } = ctx.request.body
     const user = await User.findOne({
       username
     })
     if (!user) {
-      ctx.body = failResponse('用户不存在')
+      failureResponse(ctx, 200, '用户不存在')
     } else {
       const match = await User.findOne({
         username,
@@ -30,43 +30,40 @@ router.post('/login', async ctx => {
           maxAge: 86400000,
           httpOnly: false
         })
-        ctx.body = successResponse({
+        successResponse(ctx, {
           username
         })
       } else {
-        ctx.body = failResponse('用户名或者密码不正确！')
+        failureResponse(ctx, 200, '用户名或者密码不正确！')
       }
     }
   } catch (err) {
-    ctx.status = 500
-    ctx.body = failResponse(err.message)
+    failureResponse(ctx, 500, err.message)
   }
 })
 
 // 用户注册
 router.post('/register', async ctx => {
   try {
-    const {username, password} = ctx.request.body
-    console.log(username, password)
-    const exist = await User.findOne({username})
+    const { username, password } = ctx.request.body
+    const exist = await User.findOne({ username })
     if (exist) {
-      ctx.body = failResponse('用户名重复,请重新输入或者去登录！')
+      failureResponse(ctx, 200, '用户名重复,请重新输入或者去登录！')
       return
     }
-    const newUser = new User({username, password: md5Pwd(password)})
+    const newUser = new User({ username, password: md5Pwd(password) })
     const user = await newUser.save()
-    const {_id} = user
+    const { _id } = user
     ctx.cookies.set('userId', _id, {
       path: '/',
       maxAge: 86400000,
       httpOnly: false
     })
-    ctx.body = successResponse({
+    successResponse(ctx, {
       username
     })
   } catch (err) {
-    ctx.status = 500
-    ctx.body = failResponse(err.message)
+    failureResponse(ctx, 500, err.message)
   }
 })
 
@@ -76,18 +73,18 @@ router.post('/logout', async ctx => {
     path: '/',
     maxAge: -1
   })
-  ctx.body = successResponse('注销成功')
+  successResponse(ctx, '注销成功')
 })
 
 // 获取用户购物车数据
 router.get('/cart', async ctx => {
   try {
     const _id = ctx.cookies.get('userId')
-    const user = await User.findOne({_id})
-    ctx.body = successResponse(user.cartList)
+    const user = await User.findOne({ _id })
+    const { cartList } = user
+    successResponse(ctx, cartList)
   } catch (err) {
-    ctx.status = 500
-    ctx.body = failResponse(err.message)
+    failureResponse(ctx, 500, err.message)
   }
 })
 
@@ -95,7 +92,7 @@ router.get('/cart', async ctx => {
 router.get('/cartCount', async ctx => {
   try {
     const _id = ctx.cookies.get('userId')
-    const user = await User.findOne({_id}).populate('cartList.goods')
+    const user = await User.findOne({ _id }).populate('cartList.goods')
     let count = 0
     if (user.cartList.length) {
       user.cartList.forEach(item => {
@@ -104,10 +101,9 @@ router.get('/cartCount', async ctx => {
         }
       })
     }
-    ctx.body = successResponse(count)
+    successResponse(ctx, count)
   } catch (err) {
-    ctx.status = 500
-    ctx.body = failResponse(err.message)
+    failureResponse(ctx, 500, err.message)
   }
 })
 
@@ -115,15 +111,14 @@ router.get('/cartCount', async ctx => {
 router.post('/cart/del', async ctx => {
   try {
     const _id = ctx.cookies.get('userId')
-    const productId = ctx.request.body.productId
-    const user = await User.findOne({_id})
+    const { productId } = ctx.request.body
+    const user = await User.findOne({ _id })
     const idx = user.cartList.findIndex(item => item.goods.productId === productId)
     user.cartList.splice(idx, 1)
     await user.save()
-    ctx.body = successResponse(user.cartList)
+    successResponse(ctx, user.cartList)
   } catch (err) {
-    ctx.status = 500
-    ctx.body = failResponse(err.message)
+    failureResponse(ctx, 500, err.message)
   }
 })
 
@@ -131,10 +126,8 @@ router.post('/cart/del', async ctx => {
 router.post('/cart/edit', async ctx => {
   try {
     const _id = ctx.cookies.get('userId')
-    const productId = ctx.request.body.productId
-    const goodsNum = ctx.request.body.goodsNum
-    const isChecked = ctx.request.body.isChecked
-    const user = await User.findOne({_id}).populate('cartList.goods')
+    const { productId, goodsNum, isChecked } = ctx.request.body
+    const user = await User.findOne({ _id }).populate('cartList.goods')
     const idx = user.cartList.findIndex(item => item.goods.productId === productId)
     if (goodsNum) {
       user.cartList[idx].goodsNum = goodsNum
@@ -143,10 +136,9 @@ router.post('/cart/edit', async ctx => {
       user.cartList[idx].isChecked = isChecked
     }
     await user.save()
-    ctx.body = successResponse(user.cartList)
+    successResponse(ctx, user.cartList)
   } catch (err) {
-    ctx.status = 500
-    ctx.body = failResponse(err.message)
+    failureResponse(ctx, 500, err.message)
   }
 })
 
@@ -154,19 +146,17 @@ router.post('/cart/edit', async ctx => {
 router.post('/cart/checkedAll', async ctx => {
   try {
     const _id = ctx.cookies.get('userId')
-    const isCheckedAll = ctx.request.body.isCheckedAll
-    console.log(isCheckedAll)
-    const user = await User.findOne({_id}).populate('cartList.goods')
+    const { isCheckedAll } = ctx.request.body
+    const user = await User.findOne({ _id }).populate('cartList.goods')
     if (user.cartList.length) {
       user.cartList.forEach(item => {
         item.isChecked = isCheckedAll
       })
       await user.save()
-      ctx.body = successResponse(user.cartList)
+      successResponse(ctx, user.cartList)
     }
   } catch (err) {
-    ctx.status = 500
-    ctx.body = failResponse(err.message)
+    failureResponse(ctx, 500, err.message)
   }
 })
 
@@ -174,11 +164,10 @@ router.post('/cart/checkedAll', async ctx => {
 router.get('/address', async ctx => {
   try {
     const _id = ctx.cookies.get('userId')
-    const user = await User.findOne({_id})
-    ctx.body = successResponse(user.addressList)
+    const user = await User.findOne({ _id })
+    successResponse(ctx, user.addressList)
   } catch (err) {
-    ctx.status = 500
-    ctx.body = failResponse(err.message)
+    failureResponse(ctx, 500, err.message)
   }
 })
 
@@ -186,19 +175,16 @@ router.get('/address', async ctx => {
 router.post('/address/del', async ctx => {
   try {
     const _id = ctx.cookies.get('userId')
-    const addressId = ctx.request.body.addressId
-    console.log(addressId)
-    const user = await User.findOne({_id})
+    const { addressId } = ctx.request.body
+    const user = await User.findOne({ _id })
     const idx = user.addressList.findIndex(item => {
       return item._id.toString() === addressId
     })
-    console.log(idx)
     user.addressList.splice(idx, 1)
     await user.save()
-    ctx.body = successResponse(user.addressList)
+    successResponse(ctx, user.addressList)
   } catch (err) {
-    ctx.status = 500
-    ctx.body = failResponse(err.message)
+    failureResponse(ctx, 500, err.message)
   }
 })
 
@@ -206,16 +192,15 @@ router.post('/address/del', async ctx => {
 router.post('/address/edit', async ctx => {
   try {
     const _id = ctx.cookies.get('userId')
-    const newData = ctx.request.body.newData
+    const { newData } = ctx.request.body
     newData.meta.updateAt = Date.now()
-    const user = await User.findOne({_id})
+    const user = await User.findOne({ _id })
     const idx = user.addressList.findIndex(item => item._id.toString() === newData._id)
     user.addressList.splice(idx, 1, newData)
     await user.save()
-    ctx.body = successResponse(user.addressList)
+    successResponse(ctx, user.addressList)
   } catch (err) {
-    ctx.status = 500
-    ctx.body = failResponse(err.message)
+    failureResponse(ctx, 500, err.message)
   }
 })
 
@@ -223,14 +208,13 @@ router.post('/address/edit', async ctx => {
 router.post('/address/add', async ctx => {
   try {
     const _id = ctx.cookies.get('userId')
-    const newAddress = ctx.request.body.newAddress
-    const user = await User.findOne({_id})
+    const { newAddress } = ctx.request.body
+    const user = await User.findOne({ _id })
     user.addressList.push(newAddress)
     await user.save()
-    ctx.body = successResponse(user.addressList)
+    successResponse(ctx, user.addressList)
   } catch (err) {
-    ctx.status = 500
-    ctx.body = failResponse(err.message)
+    failureResponse(ctx, 500, err.message)
   }
 })
 
@@ -238,20 +222,15 @@ router.post('/address/add', async ctx => {
 router.post('/address/setDefault', async ctx => {
   try {
     const _id = ctx.cookies.get('userId')
-    const addressId = ctx.request.body.addressId
-    const user = await User.findOne({_id})
+    const { addressId } = ctx.request.body
+    const user = await User.findOne({ _id })
     user.addressList.forEach(item => {
-      if (item._id.toString() === addressId) {
-        item.isDefault = true
-      } else {
-        item.isDefault = false
-      }
+      item.isDefault = item._id.toString() === addressId
     })
     await user.save()
-    ctx.body = successResponse(user.addressList)
+    successResponse(ctx, user.addressList)
   } catch (err) {
-    ctx.status = 500
-    ctx.body = failResponse(err.message)
+    failureResponse(ctx, 500, err.message)
   }
 })
 
@@ -259,20 +238,15 @@ router.post('/address/setDefault', async ctx => {
 router.post('/address/checked', async ctx => {
   try {
     const _id = ctx.cookies.get('userId')
-    const addressId = ctx.request.body.addressId
-    const user = await User.findOne({_id})
+    const { addressId } = ctx.request.body
+    const user = await User.findOne({ _id })
     user.addressList.forEach(item => {
-      if (item._id.toString() === addressId) {
-        item.isChecked = true
-      } else {
-        item.isChecked = false
-      }
+      item.isChecked = item._id.toString() === addressId
     })
     await user.save()
-    ctx.body = successResponse(user.addressList)
+    successResponse(ctx, user.addressList)
   } catch (err) {
-    ctx.status = 500
-    ctx.body = failResponse(err.message)
+    failureResponse(ctx, 500, err.message)
   }
 })
 
@@ -280,7 +254,7 @@ router.post('/address/checked', async ctx => {
 router.get('/orderDetail', async ctx => {
   try {
     const _id = ctx.cookies.get('userId')
-    const user = await User.findOne({_id}).populate('cartList.goods')
+    const user = await User.findOne({ _id }).populate('cartList.goods')
     const goodsList = user.cartList.filter(item => item.isChecked === true)
     let orderTotalPrice = 0
     user.cartList.forEach(item => {
@@ -301,6 +275,8 @@ router.get('/orderDetail', async ctx => {
         ship = item
       }
     })
+    // 加上快递费
+    orderTotalPrice += parseInt(ship.cost)
     const orderId = createOrderId()
     const order = {
       orderId,
@@ -313,10 +289,9 @@ router.get('/orderDetail', async ctx => {
     user.orderList.push(order)
     user.cartList = []
     await user.save()
-    ctx.body = successResponse(order)
+    successResponse(ctx, order)
   } catch (err) {
-    ctx.status = 500
-    ctx.body = failResponse(err.message)
+    failureResponse(ctx, 500, err.message)
   }
 })
 

@@ -1,7 +1,6 @@
 const User = require('./models/user')
 const Goods = require('./models/goods')
 const Ship = require('./models/ship')
-require('./index')
 
 const goodsData = require('../data/goods')
 const userData = require('../data/users')

@@ -1,17 +1,18 @@
 const utility = require('utility')
-const moment = require('moment')
+const { format } = require('date-fns')
 
-const successResponse = data => {
-  return {
+const successResponse = (ctx, data) => {
+  ctx.body = {
     success: true,
-    result: data
+    data
   }
 }
 
-const failResponse = msg => {
-  return {
+const failureResponse = (ctx, status, msg) => {
+  ctx.status = status
+  ctx.body = {
     success: false,
-    message: msg
+    msg
   }
 }
 
@@ -24,13 +25,13 @@ const createOrderId = () => {
   const platform = '666'
   const r1 = Math.floor(Math.random() * 10)
   const r2 = Math.floor(Math.random() * 10)
-  const sysDate = moment().format('YYYYMMDDhhmmss')
+  const sysDate = format(new Date(), 'YYYYMMDDHHmmss')
   return platform + r1 + sysDate + r2
 }
 
 module.exports = {
   successResponse,
-  failResponse,
+  failureResponse,
   md5Pwd,
   createOrderId
 }

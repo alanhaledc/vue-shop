@@ -3,10 +3,10 @@ const bodyParser = require('koa-bodyparser')
 const logger = require('koa-logger')
 const serve = require('koa-static')
 const path = require('path')
-const {failResponse} = require('./utils')
+const { failureResponse } = require('./utils')
 
 const router = require('./routes')
-require('./db/index')
+require('./database/index')
 
 const app = new Koa()
 
@@ -23,12 +23,11 @@ app.use(async (ctx, next) => {
         ctx.url === '/user/register' || ctx.url.indexOf('/goods/list') > -1) {
         await next()
       } else {
-        ctx.body = failResponse('当前未登录')
+        ctx.body = failureResponse(ctx, 401, '当前未登录')
       }
     }
   } catch (err) {
-    ctx.status = 500
-    ctx.body = failResponse(err.message)
+    failureResponse(ctx, 500, err.message)
   }
 })
 
@@ -41,5 +40,5 @@ app.listen(PORT, err => {
     console.log(err)
     return
   }
-  console.log(`Server started at port: ${PORT}!`)
+  console.log(`Server running at http://127.0.0.1:${PORT}!`)
 })
