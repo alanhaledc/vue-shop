@@ -16,140 +16,155 @@ const normalizeCart = data => {
   return cartList
 }
 
-export const login = ({commit}, {username, password}) => {
+export const login = ({ commit }, { username, password }) => {
   return api.login(username, password)
-    .then(data => {
-      if (data.status === 0) {
-        commit('setUserInfo', data.result)
+    .then(res => {
+      const { data } = res
+      if (data.success) {
+        commit('setUserInfo', data.data)
       }
-      return data
+      return res
     })
 }
 
-export const register = ({commit}, {username, password}) => {
+export const register = ({ commit }, { username, password }) => {
   return api.register(username, password)
-    .then(data => {
-      if (data.status === 0) {
-        commit('setUserInfo', data.result)
+    .then(res => {
+      const { data } = res
+      if (data.success) {
+        commit('setUserInfo', data.data)
       }
-      return data
+      return res
     })
 }
 
-export const logout = ({commit}) => {
+export const logout = ({ commit }) => {
   return api.logout()
-    .then(data => {
-      if (data.status === 0) {
+    .then(res => {
+      const { data } = res
+      if (data.success) {
         commit('setUserInfo', {})
       }
-      return data
+      return res
     })
 }
 
-export const getCart = ({commit}) => {
+export const getCart = ({ commit }) => {
   api.getUserCart()
-    .then(data => {
-      if (data.status === 0) {
-        commit('setCart', normalizeCart(data.result))
+    .then(res => {
+      const { data } = res
+      if (data.success) {
+        commit('setCart', normalizeCart(data.data))
       }
     })
 }
 
-export const getCartCount = ({commit}) => {
+export const getCartCount = ({ commit }) => {
   api.getUserCartCount()
-    .then(data => {
-      if (data.status === 0) {
-        commit('setCartCount', data.result)
+    .then(res => {
+      const { data } = res
+      if (data.success) {
+        commit('setCartCount', data.data)
       }
     })
 }
 
-export const deleteCart = ({commit}, productId) => {
+export const deleteCart = ({ commit }, productId) => {
   api.deleteCart(productId)
-    .then(data => {
-      if (data.status === 0) {
-        commit('setCart', normalizeCart(data.result))
+    .then(res => {
+      const { data } = res
+      if (data.success) {
+        commit('setCart', normalizeCart(data.data))
       }
     })
 }
 
-export const editCart = ({commit}, {productId, goodsNum, isChecked}) => {
+export const editCart = ({ commit }, { productId, goodsNum, isChecked }) => {
   api.editCart(productId, goodsNum, isChecked)
-    .then(data => {
-      if (data.status === 0) {
-        commit('setCart', normalizeCart(data.result))
+    .then(res => {
+      const { data } = res
+      if (data.success) {
+        commit('setCart', normalizeCart(data.data))
       }
     })
 }
 
-export const checkedAll = ({commit}, isCheckedAll) => {
+export const checkedAll = ({ commit }, isCheckedAll) => {
   api.checkedAll(isCheckedAll)
-    .then(data => {
-      if (data.status === 0) {
-        commit('setCart', normalizeCart(data.result))
+    .then(res => {
+      const { data } = res
+      if (data.success) {
+        commit('setCart', normalizeCart(data.data))
       }
     })
 }
 
-export const getAddressList = ({commit}) => {
+export const getAddressList = ({ commit }) => {
   api.getAddress()
-    .then(data => {
-      if (data.status === 0) {
-        commit('setAddress', data.result)
+    .then(res => {
+      const { data } = res
+      if (data.success) {
+        commit('setAddress', data.data)
       }
     })
 }
 
-export const addAddress = ({commit}, newAddress) => {
+export const addAddress = ({ commit }, newAddress) => {
   api.addAddress(newAddress)
-    .then(data => {
-      if (data.status === 0) {
-        commit('setAddress', data.result)
+    .then(res => {
+      const { data } = res
+      if (data.success) {
+        commit('setAddress', data.data)
       }
     })
 }
 
-export const deleteAddress = ({commit}, addressId) => {
+export const deleteAddress = ({ commit }, addressId) => {
   api.deleteAddress(addressId)
-    .then(data => {
-      if (data.status === 0) {
-        commit('setAddress', data.result)
+    .then(res => {
+      const { data } = res
+      if (data.success) {
+        commit('setAddress', data.data)
       }
     })
 }
 
-export const editAddress = ({commit}, newData) => {
+export const editAddress = ({ commit }, newData) => {
   api.editAddress(newData)
-    .then(data => {
-      if (data.status === 0) {
-        commit('setAddress', data.result)
+    .then(res => {
+      const { data } = res
+      if (data.success) {
+        commit('setAddress', data.data)
       }
     })
 }
 
-export const setDefaultAddress = ({commit}, addressId) => {
+export const setDefaultAddress = ({ commit }, addressId) => {
   api.setDefaultAddress(addressId)
-    .then(data => {
-      if (data.status === 0) {
-        commit('setAddress', data.result)
+    .then(res => {
+      const { data } = res
+      if (data.success) {
+        commit('setAddress', data.data)
       }
     })
 }
 
-export const checkedAddress = ({commit}, addressId) => {
+export const checkedAddress = ({ commit }, addressId) => {
   api.checkedAddress(addressId)
-    .then(data => {
-      if (data.status === 0) {
-        commit('setAddress', data.result)
+    .then(res => {
+      const { data } = res
+      if (data.success) {
+        commit('setAddress', data.data)
       }
     })
 }
 
-export const getOrderDetail = ({commit}) => {
+export const getOrderDetail = ({ commit }) => {
   api.getOrderDetail()
-    .then(data => {
-      if (data.status === 0) {
-        commit('setOrderDetail', data.result)
+    .then(res => {
+      const { data } = res
+      if (data.success) {
+        commit('setOrderDetail', data.data)
       }
     })
 }

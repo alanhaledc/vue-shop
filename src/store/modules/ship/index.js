@@ -12,19 +12,21 @@ const mutations = {
   }
 }
 const actions = {
-  getShipList({commit}) {
+  getShipList({ commit }) {
     api.getShipList()
-      .then(data => {
-        if (data.status === 0) {
-          commit('setShipList', data.result)
+      .then(res => {
+        const { data } = res
+        if (data.success) {
+          commit('setShipList', data.data)
         }
       })
   },
-  checkedShip({commit}, shipId) {
+  checkedShip({ commit }, shipId) {
     api.checkedShip(shipId)
-      .then(data => {
-        if (data.status === 0) {
-          commit('setShipList', data.result)
+      .then(res => {
+        const { data } = res
+        if (data.success) {
+          commit('setShipList', data.data)
         }
       })
   }

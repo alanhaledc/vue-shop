@@ -7,7 +7,7 @@ const getters = {
   goodsList: state => state.goodsList
 }
 const mutations = {
-  setGoodsList(state, {list, flag}) {
+  setGoodsList(state, { list, flag }) {
     if (flag) {
       state.goodsList = state.goodsList.concat(list)
     } else {
@@ -16,15 +16,16 @@ const mutations = {
   }
 }
 const actions = {
-  getGoodsList({commit}, {page, pageSize, sort, priceLevel, flag}) {
+  getGoodsList({ commit }, { page, pageSize, sort, priceLevel, flag }) {
     api.getGoodsList(page, pageSize, sort, priceLevel)
-      .then(data => {
-        if (data.status === 0) {
-          commit('setGoodsList', {list: data.result.list, flag})
+      .then(res => {
+        const { data } = res
+        if (data.success) {
+          commit('setGoodsList', { list: data.data.list, flag })
         }
       })
   },
-  addCart({commit}, productId) {
+  addCart({ commit }, productId) {
     return api.addCart(productId)
   }
 }
