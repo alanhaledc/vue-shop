@@ -17,7 +17,7 @@
         </q-item-side>
         <q-item-main>
           <q-item-tile>{{orderDetail.shipInfo.ship}}</q-item-tile>
-          <q-item-tile>{{orderDetail.shipInfo.cost}}</q-item-tile>
+          <q-item-tile>{{orderDetail.shipInfo.cost}}元</q-item-tile>
         </q-item-main>
       </q-item>
       <q-item-separator/>
@@ -59,31 +59,33 @@
 </template>
 
 <script>
-  import {mapGetters, mapActions} from 'vuex'
+import { mapGetters, mapActions } from 'vuex'
 
-  export default {
-    name: 'OrderDetail',
-    data() {
-      return {
-        columns: [
-          {name: 'name', field: 'name', label: '商品', align: 'center'},
-          {name: 'price', field: 'price', label: '单价', align: 'center'},
-          {name: 'quantity', field: 'quantity', label: '数量', align: 'center'},
-          {name: 'totalPrice', field: 'totalPrice', label: '总价', align: 'center'}
-        ]
-      }
-    },
-    created() {
-      this.getOrderDetail()
-      this.getCartCount()
-    },
-    computed: {
-      ...mapGetters('user', ['orderDetail'])
-    },
-    methods: {
-      ...mapActions('user', ['getOrderDetail', 'getCartCount'])
+export default {
+  name: 'OrderDetail',
+  data() {
+    return {
+      columns: [
+        { name: 'name', field: 'name', label: '商品', align: 'center' },
+        { name: 'price', field: 'price', label: '单价', align: 'center' },
+        { name: 'quantity', field: 'quantity', label: '数量', align: 'center' },
+        { name: 'totalPrice', field: 'totalPrice', label: '总价', align: 'center' }
+      ]
     }
+  },
+  created() {
+    this.getOrderDetail()
+    setTimeout(() => {
+      this.getCartCount()
+    }, 200)
+  },
+  computed: {
+    ...mapGetters('user', ['orderDetail'])
+  },
+  methods: {
+    ...mapActions('user', ['getOrderDetail', 'getCartCount'])
   }
+}
 </script>
 
 <style>
