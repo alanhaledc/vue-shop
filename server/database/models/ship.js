@@ -4,7 +4,7 @@ const Schema = mongoose.Schema
 
 const shipSchema = new Schema({
   ship: String,
-  cost: String,
+  cost: Number,
   isChecked: {
     type: Boolean,
     default: false
