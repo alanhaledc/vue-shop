@@ -14,7 +14,7 @@
         <q-card style="width: 100%">
           <q-card-title>
             <q-item-tile>{{ship.ship}}</q-item-tile>
-            <q-item-tile>{{ship.cost}}</q-item-tile>
+            <q-item-tile>{{ship.cost === '0' ? '免费': ship.cost + '元'}}</q-item-tile>
             <div slot="right">
               <q-btn
                 icon="done"
@@ -31,23 +31,23 @@
 </template>
 
 <script>
-  import {mapGetters, mapActions} from 'vuex'
+import { mapGetters, mapActions } from 'vuex'
 
-  export default {
-    name: 'Ship',
-    data() {
-      return {}
-    },
-    created() {
-      this.getShipList()
-    },
-    computed: {
-      ...mapGetters('ship', ['shipList'])
-    },
-    methods: {
-      ...mapActions('ship', ['getShipList', 'checkedShip'])
-    }
+export default {
+  name: 'Ship',
+  data() {
+    return {}
+  },
+  created() {
+    this.getShipList()
+  },
+  computed: {
+    ...mapGetters('ship', ['shipList'])
+  },
+  methods: {
+    ...mapActions('ship', ['getShipList', 'checkedShip'])
   }
+}
 </script>
 
 <style lang="stylus" scoped>
