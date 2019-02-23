@@ -51,7 +51,7 @@
 
 <script>
 import { mapActions, mapGetters } from 'vuex'
-import { throttle } from 'quasar'
+import { debounce } from 'quasar'
 
 export default {
   name: 'GoodsList',
@@ -70,7 +70,7 @@ export default {
   created() {
     this._getGoodsList(false)
     // 监听window滚动
-    this.onScroll = window.addEventListener('scroll', throttle(this.loadMore, 300))
+    this.onScroll = window.addEventListener('scroll', debounce(this.loadMore, 300))
   },
   beforeDestroy() {
     if (this.onScroll) {
@@ -114,7 +114,6 @@ export default {
      * 下拉刷新
      */
     loadMore() {
-      console.log(123)
       if (!this.isGetMore) {
         return
       }
