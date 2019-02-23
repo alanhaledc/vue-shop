@@ -173,7 +173,6 @@ export default {
       }
     },
     deleteItem(id) {
-      console.log(id)
       this.$q.dialog({
         title: '警告',
         message: '确定要删除吗？',
