@@ -1,5 +1,6 @@
 const Koa = require('koa')
 const bodyParser = require('koa-bodyparser')
+const historyApiFallback = require('koa2-history-api-fallback')
 const logger = require('koa-logger')
 const serve = require('koa-static')
 const path = require('path')
@@ -10,9 +11,12 @@ require('./database/index')
 
 const app = new Koa()
 
+app.use(historyApiFallback({}))
 app.use(logger())
 app.use(bodyParser())
-app.use(serve(path.join(__dirname, './static')))
+app.use(serve(path.join(__dirname, './static'), {
+  maxAge: 1000 * 60 * 60 * 24 * 7
+}))
 
 app.use(async (ctx, next) => {
   try {
