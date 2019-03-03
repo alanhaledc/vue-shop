@@ -1,6 +1,6 @@
 import Vue from 'vue'
 import VueRouter from 'vue-router'
-import { Cookies } from 'quasar'
+import { Cookies, Dialog } from 'quasar'
 
 import routes from './routes'
 
@@ -11,7 +11,7 @@ Vue.use(VueRouter)
  * directly export the Router instantiation
  */
 
-export default function (/* { store, ssrContext } */) {
+export default function(/* { store, ssrContext } */) {
   const Router = new VueRouter({
     scrollBehavior: () => ({ y: 0 }),
     routes,
@@ -28,6 +28,12 @@ export default function (/* { store, ssrContext } */) {
         next()
       } else {
         next('/home/goods')
+        Dialog.create({
+          title: '警告',
+          message: '当前未登录',
+          color: 'negative',
+          ok: '确定'
+        })
       }
     } else {
       next()
