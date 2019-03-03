@@ -1,23 +1,20 @@
 <template>
   <q-layout view="lhh Lpr lff">
     <q-layout-header>
-      <q-toolbar
-        color="#000"
-      >
-        <q-btn
-          flat
-          dense
-          round
-          color="primary"
-        >
+      <q-toolbar color="#000">
+        <q-btn flat dense round color="primary">
           <q-icon name="menu"/>
         </q-btn>
 
-        <q-toolbar-title class="text-primary q-title">
-          网上商城
-        </q-toolbar-title>
+        <q-toolbar-title class="text-primary q-title">网上商城</q-toolbar-title>
         <q-btn-group flat v-show="showLoginBtn">
-          <q-btn flat rounded color="secondary" class="q-subheading" @click="showLoginModal(false)">注册</q-btn>
+          <q-btn
+            flat
+            rounded
+            color="secondary"
+            class="q-subheading"
+            @click="showLoginModal(false)"
+          >注册</q-btn>
           <q-btn flat rounded color="primary" class="q-subheading" @click="showLoginModal(true)">登录</q-btn>
         </q-btn-group>
         <div flat v-show="!showLoginBtn">
@@ -33,21 +30,19 @@
             <q-chip
               floating
               class="text-pink text-weight-bolder q-subheading bg-transparent q-mr-sm q-mt-xs"
-            >
-              {{cartCount}}
-            </q-chip>
+            >{{cartCount}}</q-chip>
           </q-btn>
           <q-btn color="negative" rounded class="q-subheading q-ml-md" @click="_logout">注销</q-btn>
         </div>
       </q-toolbar>
-      <q-toolbar
-        color="light"
-      >
+      <q-toolbar color="light">
         <q-toolbar-title>
-          <q-breadcrumbs
-            color="teal"
-          >
-            <q-breadcrumbs-el label="HOME" @click.native="$router.push('/home')" style="cursor: pointer"/>
+          <q-breadcrumbs color="teal">
+            <q-breadcrumbs-el
+              label="HOME"
+              @click.native="$router.push('/home')"
+              style="cursor: pointer"
+            />
             <q-breadcrumbs-el color="primary" :label="label"/>
           </q-breadcrumbs>
         </q-toolbar-title>
@@ -57,19 +52,14 @@
       <q-item>
         <q-btn
           icon="close"
-          dense round
+          dense
+          round
           color="negative"
           class="absolute-top-right q-mt-xs q-mr-xs"
           @click="opened=false"
         ></q-btn>
       </q-item>
-      <q-tabs
-        inverted
-        v-model="selectTab"
-        align="justify"
-        style="width: 100%"
-        no-pane-border
-      >
+      <q-tabs inverted v-model="selectTab" align="justify" style="width: 100%" no-pane-border>
         <q-tab slot="title" name="tab-1" label="登录"/>
         <q-tab slot="title" name="tab-2" label="注册"/>
         <q-tab-pane name="tab-1">
@@ -178,9 +168,6 @@ export default {
       selectTab: 'tab-1'
     }
   },
-  created() {
-    this.getCartCount()
-  },
   computed: {
     label() {
       return this.$route.name.toUpperCase()
@@ -213,26 +200,25 @@ export default {
       this.register({
         username,
         password
+      }).then(res => {
+        const { data } = res
+        if (data.success) {
+          this.$q.notify({
+            message: '注册成功',
+            color: 'positive',
+            icon: 'done',
+            position: 'top'
+          })
+          this.opened = false
+          this.setCartCount(0)
+        } else {
+          this.$q.notify({
+            message: data.message,
+            icon: 'warning',
+            position: 'top'
+          })
+        }
       })
-        .then(res => {
-          const { data } = res
-          if (data.success) {
-            this.$q.notify({
-              message: '注册成功',
-              color: 'positive',
-              icon: 'done',
-              position: 'top'
-            })
-            this.opened = false
-            this.setCartCount(0)
-          } else {
-            this.$q.notify({
-              message: data.message,
-              icon: 'warning',
-              position: 'top'
-            })
-          }
-        })
     },
     _login() {
       this.$v.LoginForm.$touch()
@@ -249,39 +235,37 @@ export default {
       this.login({
         username,
         password
-      })
-        .then(res => {
-          const { data } = res
-          if (data.success) {
-            this.$q.notify({
-              message: '登录成功',
-              color: 'positive',
-              icon: 'done',
-              position: 'top'
-            })
-            this.opened = false
-            this.getCartCount()
-          } else {
-            this.$q.notify({
-              message: data.msg,
-              icon: 'warning',
-              position: 'top'
-            })
-          }
-        })
-    },
-    _logout() {
-      this.logout()
-        .then(() => {
-          this.$q.localStorage.clear()
+      }).then(res => {
+        const { data } = res
+        if (data.success) {
           this.$q.notify({
-            message: '退出成功',
+            message: '登录成功',
             color: 'positive',
             icon: 'done',
             position: 'top'
           })
-          this.$router.push('/')
+          this.opened = false
+          this.getCartCount()
+        } else {
+          this.$q.notify({
+            message: data.msg,
+            icon: 'warning',
+            position: 'top'
+          })
+        }
+      })
+    },
+    _logout() {
+      this.logout().then(() => {
+        this.$q.localStorage.clear()
+        this.$q.notify({
+          message: '退出成功',
+          color: 'positive',
+          icon: 'done',
+          position: 'top'
         })
+        this.$router.push('/')
+      })
     },
     ...mapActions('user', ['login', 'register', 'logout', 'getCartCount']),
     ...mapMutations('user', ['setCartCount'])
