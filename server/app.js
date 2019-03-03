@@ -6,6 +6,8 @@ const serve = require('koa-static')
 const path = require('path')
 const { failureResponse } = require('./utils')
 
+const isProd = process.env.NODE_ENV === 'production'
+
 const router = require('./routes')
 require('./database/index')
 
@@ -14,24 +16,32 @@ const app = new Koa()
 app.use(historyApiFallback({}))
 app.use(logger())
 app.use(bodyParser())
-app.use(serve(path.join(__dirname, './static'), {
-  maxAge: 1000 * 60 * 60 * 24 * 7
-}))
+app.use(
+  serve(path.join(__dirname, './static'), {
+    maxAge: 1000 * 60 * 60 * 24 * 7
+  })
+)
 
 app.use(async (ctx, next) => {
   try {
     if (ctx.cookies.get('userId')) {
       await next()
     } else {
-      if (ctx.url === '/user/login' || ctx.url === '/user/logout' ||
-        ctx.url === '/user/register' || ctx.url.indexOf('/goods/list') > -1) {
+      if (
+        ctx.url === '/user/login' ||
+        ctx.url === '/user/logout' ||
+        ctx.url === '/user/register' ||
+        ctx.url.indexOf('/goods/list') > -1
+      ) {
         await next()
       } else {
-        ctx.body = failureResponse(ctx, 401, '当前未登录')
+        failureResponse(ctx, 401, '当前未登录')
       }
     }
   } catch (err) {
-    failureResponse(ctx, 500, err.message)
+    isProd
+      ? failureResponse(ctx, 500, '服务器内部错误')
+      : failureResponse(ctx, 500, err.message)
   }
 })
 
